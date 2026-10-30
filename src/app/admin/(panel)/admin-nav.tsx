@@ -4,14 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // Secțiunile marcate `soon` se construiesc în faza 2 (admin core) și 5–6.
-export const adminSections = [
+export const adminSections: { href: string; label: string; soon?: boolean }[] = [
   { href: "/admin", label: "Panou" },
   { href: "/admin/sezoane", label: "Sezoane și categorii" },
   { href: "/admin/competitii", label: "Competiții și faze" },
   { href: "/admin/echipe", label: "Cluburi, echipe, jucători" },
-  { href: "/admin/meciuri", label: "Meciuri și rezultate", soon: true },
-  { href: "/admin/inscrieri", label: "Înscrieri", soon: true },
-  { href: "/admin/continut", label: "Anunțuri, sponsori, premii", soon: true },
+  { href: "/admin/meciuri", label: "Meciuri și rezultate" },
+  { href: "/admin/inscrieri", label: "Înscrieri" },
+  { href: "/admin/continut", label: "Anunțuri, sponsori, premii" },
 ];
 
 export function AdminNav() {

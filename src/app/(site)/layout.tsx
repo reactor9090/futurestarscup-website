@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Logo } from "@/components/logo";
 import { SiteNav } from "@/components/site-nav";
 
@@ -28,7 +29,9 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
       <header className="sticky top-0 z-40 bg-pitch-950">
         <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Logo />
-          <SiteNav />
+          <Suspense>
+            <SiteNav />
+          </Suspense>
         </div>
       </header>
 

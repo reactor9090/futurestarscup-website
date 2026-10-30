@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { Announcements, HomeSponsors } from "@/components/home-content";
 
 const sections = [
   { href: "/clasament", title: "Clasament", text: "Pozițiile echipelor pe fiecare categorie de vârstă, calculate automat." },
@@ -43,6 +45,10 @@ export default function HomePage() {
         </div>
       </section>
 
+      <Suspense>
+        <Announcements />
+      </Suspense>
+
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {sections.map((s) => (
@@ -59,6 +65,9 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+      <Suspense>
+        <HomeSponsors />
+      </Suspense>
     </>
   );
 }

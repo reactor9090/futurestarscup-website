@@ -1,8 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
+import { ClubLogo } from "@/components/club-logo";
 import { ActionForm, SubmitButton } from "@/components/admin/action-form";
 import { Field, inputClass } from "@/components/admin/fields";
 import { addTeam, deleteClub, deleteTeam, removeClubLogo, updateClub, uploadClubLogo } from "./actions";
+
+export { ClubLogo };
 
 type Contact = { phone: string | null; email: string | null };
 
@@ -22,22 +24,6 @@ export type ClubData = {
     roster_entries: { count: number }[];
   }[];
 };
-
-export function ClubLogo({ url, size = 40 }: { url: string | null; size?: number }) {
-  return url ? (
-    <Image src={url} alt="" width={size} height={size} className="rounded-md bg-white object-contain" style={{ width: size, height: size }} />
-  ) : (
-    <span
-      className="grid shrink-0 place-items-center rounded-md bg-pitch-100 text-pitch-700"
-      style={{ width: size, height: size }}
-      aria-hidden
-    >
-      <svg viewBox="0 0 24 24" className="size-1/2" fill="currentColor">
-        <path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z" />
-      </svg>
-    </span>
-  );
-}
 
 export function ClubCard({ club, competitions }: { club: ClubData; competitions: { id: string; name: string }[] }) {
   const contact = (Array.isArray(club.club_contacts) ? club.club_contacts[0] : club.club_contacts) ?? null;
