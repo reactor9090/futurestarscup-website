@@ -1,0 +1,74 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+Future Stars Cup: a youth football championship platform. It has a public site (standings, fixtures, teams, players, top scorers, prizes, team registration) and an admin dashboard where organizers enter all data. All UI text is in **Romanian**, and the user communicates in Romanian.
+
+@AGENTS.md — Next.js 16 differs from older versions. Read `node_modules/next/dist/docs/` before using unfamiliar Next APIs.
+
+## Commands
+
+```bash
+npm run dev                                   # dev server, http://localhost:3000
+npm run build                                 # production build (also type-checks)
+npm run lint                                  # eslint
+npm test                                      # all tests (vitest)
+npx vitest run src/lib/standings.test.ts      # single file
+npx vitest run -t "întâlniri directe"         # single test by name
+npx tsc --noEmit                              # type-check only (run `npx next typegen` first if PageProps/LayoutProps types are missing)
+```
+
+The tests need no Supabase. `supabase/tests/db.test.ts` loads every migration (except storage) and `seed.sql` into an in-memory Postgres (PGlite), with a minimal stub of Supabase's `auth` schema and the `anon`/`authenticated` roles. Every SQL change must keep these tests passing.
+
+## Architecture
+
+### Data principle: store facts, compute stats
+Admins enter only facts: matches, scores, `match_events` (goals, own goals, cards) and `match_appearances`. Standings and statistics are **never stored**. They are SQL views in `supabase/migrations/*_stats_views.sql`:
+- `team_match_rows`: each finished match expanded to 2 rows, one per team.
+- `stage_participants`: which teams belong in a stage's table. A `league` stage includes every team in the competition; a `group` stage uses `group_teams`.
+- `standings`, `team_stats`, `player_stats`.
+
+Final standings order is **not** done in SQL. `src/lib/standings.ts` (`rankStandings`) applies the tiebreakers: points → goal difference → goals for → head-to-head among still-tied teams → alphabetical (`ro` locale). Points are 3/1/0.
+
+Goal events: `team_id` is the scorer's own team. An `own_goal` counts for the opponent. An assist is `assist_player_id` on a `goal` event, not a separate event. The match score is authoritative and independent of events, since scorers may be incomplete.
+
+### Domain model
+`seasons` × `categories` (age groups) → `competitions` → `stages` (`league | group | knockout`) → `stage_groups`.
+`clubs` are permanent identities. `teams` are a club's participation in one competition, which keeps history across seasons. `players` belong to teams through `roster_entries`. Only the birth **year** of a player is public. Full birth dates exist only in `registration_players`, which is admin-only. Coach contact details live in the admin-only `club_contacts` table.
+
+### Security
+RLS is enabled on every table (`*_security.sql`). Anyone can read public data, and only `is_admin()` users (those listed in the `admins` table) can write. Anonymous visitors have no direct write access to anything. Registrations go through the `security definer` RPC `submit_registration(jsonb)`. Admins use `approve_registration(id)`, which atomically creates the club, team, players and roster, and `reject_registration(id, note)`. All views use `security_invoker = true`.
+
+### Next.js app (Cache Components enabled)
+- Supabase clients live in `src/lib/supabase/`:
+  - `public.ts` has no session. Use it for public reads inside `"use cache"` functions, tagged with `cacheTag`.
+  - `server.ts` (`createSessionClient`) reads the cookie session. Use it for admin pages and Server Actions.
+- **Freshness model:** updates appear on refresh, with no realtime. Public data is cached. Every admin mutation (Server Action) must call `requireAdmin()` from `src/lib/auth.ts`, then `updateTag(...)` or `revalidatePath(...)` so the public pages refresh.
+- Anything that reads cookies or `searchParams` must sit inside `<Suspense>`, which Cache Components requires. See `AdminGate` in `src/app/admin/(panel)/layout.tsx`.
+- `src/proxy.ts` (Next 16's name for middleware) refreshes the session on `/admin/*` and redirects anonymous users to `/admin/login`. The real admin check is `requireAdmin()` plus RLS.
+- Route groups:
+  - `app/(site)/` is the public site, with header and footer.
+  - `app/admin/(auth)/login` is the login page, without the panel layout.
+  - `app/admin/(panel)/` is the admin dashboard. Sections that aren't built yet are flagged `soon` in `admin-nav.tsx`.
+- Design tokens are in `src/app/globals.css` (`@theme`): `pitch-*` greens, `gold-*` accent, `ink`/`muted`/`line`/`canvas`/`surface`. The display font is `font-display` (Barlow Condensed, uppercase headings) and the body font is Inter.
+
+### Admin section pattern
+Each admin section is `app/admin/(panel)/<section>/{page.tsx,actions.ts}`; `sezoane/` is the reference implementation.
+- `page.tsx` is a Server Component that reads with `createSessionClient()` and renders inline edit forms.
+- `actions.ts` Server Actions share one shape: `requireAdmin()` → zod validation → write → `updateTag("catalog")` + `revalidatePath(...)` → return `FormState` (`{error}` or `{ok}`). Map Postgres errors (`23505` duplicate, `23503` foreign key) to Romanian messages.
+- Shared action helpers (`idSchema`, `optionalInt`, `firstError`, `dbError`, `refresh`) are in `src/lib/admin-actions.ts`.
+- Stage `type` is immutable after creation. Groups exist only on `group` stages, and a team sits in at most one group per stage; the actions enforce both.
+- Cache tags the public site should use with `cacheTag`: `catalog` (seasons, categories, competitions, stages, groups; every `refresh()` invalidates it), `teams` (clubs, teams, players, rosters) and `matches` (matches, events, appearances). Standings and stats depend on both `teams` and `matches`.
+- Logos are uploaded by Server Actions into the public Supabase bucket `media` (png/jpg/webp, max 1 MB; `next.config.ts` allows 2 MB bodies and whitelists the bucket in `images.remotePatterns`). Each upload gets a new filename and the old object is deleted, so the CDN never serves a stale logo.
+- Client components that call `usePathname()` must sit inside `<Suspense>` once a dynamic route exists (`/admin/echipe/[teamId]`), or `next build` fails. `AdminNav` is already wrapped; `SiteNav` (`components/site-nav.tsx`) is not yet, so wrap it in the site layout when the first public dynamic route (team or player page) is added.
+- Removing a team or player is blocked in the action when matches, events or appearances reference it. When a team is deleted, players left in no roster are deleted too.
+- Forms use `ActionForm` + `SubmitButton` (`src/components/admin/action-form.tsx`), not a plain `<form action>`. React resets plain action forms after every submit, which would wipe the user's input on a validation error. Layout helpers are in `components/admin/fields.tsx`.
+- Deletes that would cascade through matches and results are blocked in the action (for example a season that still has competitions), not only in the UI.
+
+### Database workflow
+Migrations are in `supabase/migrations/`, applied in filename order. The Supabase project is applied manually through the SQL Editor; there is no CLI link. `setup-complet.sql` in the repo root is a generated concatenation of all migrations plus the seed, used for that one-time paste, and is not a source file. `supabase/seed.sql` is demo data only.
+
+Environment variables (`.env.local`, see `.env.example`): `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. No service-role key is used anywhere.
+
+## Project plan
+The approved plan has 6 phases (feature list F1–F28). Phase 1 (foundation: schema, RLS, auth, layouts, tests) is done. Phase 2 (admin core) is in progress: **Sezoane și categorii, Competiții și faze and Cluburi/echipe/jucători are done** (clubs with logo upload, teams per competition, rosters); still to build, in order: Meciuri, Rezultat meci. The user chose to stay flexible on order, so ask or follow their lead. Then public pages with real data, the registration form, and content (sponsors, prizes, banners) plus deploy to Vercel.

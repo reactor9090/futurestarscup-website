@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* Paleta Future Stars Cup: verde de gazon, auriu pentru evidențieri */
+@theme {
+  --color-ink: #0b1324;
+  --color-muted: #5b6678;
+  --color-line: #e3e7ee;
+  --color-canvas: #f5f7fa;
+  --color-surface: #ffffff;
+
+  --color-pitch-50: #ecfdf3;
+  --color-pitch-100: #d1fadf;
+  --color-pitch-500: #16a34a;
+  --color-pitch-600: #15803d;
+  --color-pitch-700: #116a35;
+  --color-pitch-800: #0f4f2c;
+  --color-pitch-900: #0b3a22;
+  --color-pitch-950: #062416;
+
+  --color-gold-400: #fbc531;
+  --color-gold-500: #f5b700;
+
+  --color-danger: #dc2626;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-barlow), var(--font-inter), ui-sans-serif, sans-serif;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
