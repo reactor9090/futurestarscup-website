@@ -24,11 +24,6 @@ export default function HomePage({ searchParams }: PageProps<"/">) {
       <Suspense fallback={<div className="h-[36rem] animate-pulse bg-forest" />}>
         <CompetitionSections searchParams={searchParams} />
       </Suspense>
-      <div className="mx-auto max-w-7xl px-4 pt-20 sm:px-6">
-        <Suspense>
-          <HomeResults searchParams={searchParams} />
-        </Suspense>
-      </div>
 
       <Suspense>
         <Announcements />
@@ -71,5 +66,17 @@ async function CompetitionSections({ searchParams }: { searchParams: PageProps<"
       </div>
     );
   }
-  return <HomeCompetitionSections competition={selected} competitions={competitions} />;
+  return (
+    <HomeCompetitionSections
+      competition={selected}
+      competitions={competitions}
+      afterSchedule={
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
+          <Suspense>
+            <HomeResults searchParams={searchParams} />
+          </Suspense>
+        </div>
+      }
+    />
+  );
 }

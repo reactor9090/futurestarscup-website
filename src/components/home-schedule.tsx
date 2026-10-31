@@ -4,13 +4,13 @@ import { initials, TeamBadge } from "@/components/club-logo";
 import { CompetitionPicker } from "@/components/competition-picker";
 import { formatDay } from "@/components/match-row";
 import { Icon, icons } from "@/components/icons";
-import { Eyebrow } from "@/components/ui";
+import { Eyebrow, signed } from "@/components/ui";
 import { positionLabels } from "@/lib/labels";
-import type { PlayerCardRow, PublicCompetition, PublicMatch } from "@/lib/public-data";
+import type { PlayerCardRow, PublicCompetition, PublicMatch, StageStandings } from "@/lib/public-data";
 import { currentRound, groupRounds } from "@/lib/rounds";
 
-// Secțiunea „Program și rezultate” de pe prima pagină: etapa curentă + golgheterul categoriei,
-// pe fundal verde închis, pe toată lățimea paginii.
+// Secțiunea „Program și rezultate” de pe prima pagină: etapa curentă în stânga, iar în dreapta
+// clasamentul (Top 6) și, sub el, golgheterul categoriei. Fundal verde închis, pe toată lățimea paginii.
 
 const TZ = "Europe/Bucharest";
 const timeFormat = new Intl.DateTimeFormat("ro-RO", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -122,6 +122,68 @@ function MatchCard({
   );
 }
 
+/* ------------------------------ Clasament (Top 6) ------------------------------ */
+
+function MiniStandings({
+  rows,
+  groupName,
+  href,
+}: {
+  rows: StageStandings["tables"][number]["rows"];
+  groupName: string | null;
+  href: string;
+}) {
+  return (
+    <div className="rounded-none border border-white/10 bg-white/[0.03] p-5">
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="font-display text-3xl font-extrabold leading-none tracking-tight text-white">Top {rows.length}</h3>
+        {groupName && <span className="text-xs font-bold uppercase tracking-wider text-lime">{groupName}</span>}
+      </div>
+
+      <div className="mt-4 grid grid-cols-[1.75rem_1fr_2.5rem_2.5rem] items-center gap-x-3 px-3 text-[10px] font-bold uppercase tracking-wider text-white/45">
+        <span>#</span>
+        <span>Echipă</span>
+        <span className="text-right" title="Golaveraj">+/−</span>
+        <span className="text-right" title="Puncte">Pct</span>
+      </div>
+
+      <ol className="mt-2 space-y-1.5">
+        {rows.map((r) => {
+          const leader = r.position === 1 && r.played > 0;
+          return (
+            <li key={r.team_id}>
+              <Link
+                href={`/echipe/${r.team_id}`}
+                className={`grid grid-cols-[1.75rem_1fr_2.5rem_2.5rem] items-center gap-x-3 rounded-md px-3 py-2 transition ${
+                  leader ? "bg-lime text-forest" : "bg-white/5 text-white hover:bg-white/10"
+                }`}
+              >
+                <span className="font-display text-lg font-extrabold tabular-nums">{r.position}</span>
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <TeamBadge url={r.logo_url} name={r.team_name} size={26} tone="dark" />
+                  <span className="truncate text-sm font-bold">{r.team_name}</span>
+                </span>
+                <span className={`text-right text-xs tabular-nums ${leader ? "text-forest/70" : "text-white/55"}`}>
+                  {signed(r.goal_difference)}
+                </span>
+                <span className="text-right font-display text-xl font-extrabold tabular-nums">{r.points}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
+
+      <Link
+        href={href}
+        className="mt-4 flex items-center justify-center gap-2 rounded-sm border border-white/20 px-5 py-3 text-sm font-bold text-white transition hover:border-lime hover:text-lime"
+      >
+        Tot clasamentul
+        <Icon d={icons.arrow} />
+      </Link>
+    </div>
+  );
+}
+
 /* ------------------------------ Golgheterul ------------------------------ */
 
 function TopScorerCard({ competition, player: p }: { competition: PublicCompetition; player: PlayerCardRow }) {
@@ -196,11 +258,13 @@ export function HomeSchedule({
   competition,
   competitions,
   matches,
+  standings,
   topScorer,
 }: {
   competition: PublicCompetition;
   competitions: PublicCompetition[];
   matches: PublicMatch[];
+  standings: StageStandings[];
   topScorer: PlayerCardRow | undefined;
 }) {
   const round = currentRound(groupRounds(matches));
@@ -211,6 +275,10 @@ export function HomeSchedule({
   const venue = venues.size === 1 ? list[0]?.venue : venues.size > 1 ? "Mai multe terenuri" : null;
   const nextId = list.find((m) => m.status === "scheduled")?.id;
   const fullHref = `/meciuri?competitie=${competition.id}${round ? `&etapa=${round.key}` : ""}`;
+  // Primul tabel cu echipe (la faza pe grupe, primul grup); clasamentul complet e în /clasament.
+  const table = standings.flatMap((s) => s.tables).find((t) => t.rows.length > 0);
+  const topRows = table?.rows.slice(0, 6) ?? [];
+  const hasSidebar = topRows.length > 0 || Boolean(topScorer);
 
   return (
     <section id="program" className="relative scroll-mt-16 overflow-hidden bg-forest">
@@ -240,7 +308,7 @@ export function HomeSchedule({
           </div>
         </div>
 
-        <div className={`mt-10 grid gap-5 ${topScorer ? "lg:grid-cols-[1fr_24rem]" : ""}`}>
+        <div className={`mt-10 grid gap-5 ${hasSidebar ? "lg:grid-cols-[1fr_24rem]" : ""}`}>
           <div className="relative overflow-hidden rounded-none border border-white/10 bg-white/[0.03] p-4 sm:p-7">
             <span className="absolute left-0 top-8 h-24 w-1 rounded-r-full bg-lime" aria-hidden />
             {round ? (
@@ -292,7 +360,18 @@ export function HomeSchedule({
             )}
           </div>
 
-          {topScorer && <TopScorerCard competition={competition} player={topScorer} />}
+          {hasSidebar && (
+            <div className="space-y-5">
+              {topRows.length > 0 && (
+                <MiniStandings
+                  rows={topRows}
+                  groupName={table?.groupName ?? null}
+                  href={`/clasament?competitie=${competition.id}`}
+                />
+              )}
+              {topScorer && <TopScorerCard competition={competition} player={topScorer} />}
+            </div>
+          )}
         </div>
       </div>
     </section>

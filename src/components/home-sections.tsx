@@ -1,6 +1,5 @@
 import { HomeLeaders } from "@/components/home-leaders";
 import { HomeSchedule } from "@/components/home-schedule";
-import { HomeStandings } from "@/components/home-standings";
 import { rankPlayers } from "@/lib/player-ranking";
 import {
   getMatches,
@@ -14,9 +13,12 @@ import {
 export async function HomeCompetitionSections({
   competition,
   competitions,
+  afterSchedule,
 }: {
   competition: PublicCompetition;
   competitions: PublicCompetition[];
+  /** Se afișează chiar sub program (rezultatele recente). */
+  afterSchedule?: React.ReactNode;
 }) {
   const [matches, stats, standings] = await Promise.all([
     getMatches(competition.id),
@@ -28,11 +30,15 @@ export async function HomeCompetitionSections({
 
   return (
     <>
-      {/* Programul și golgheterii ocupă toată lățimea (fundal închis); clasamentul stă între ele, pe fundal deschis. */}
-      <HomeSchedule competition={competition} competitions={competitions} matches={matches} topScorer={scorers[0]?.row} />
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
-        <HomeStandings competition={competition} competitions={competitions} stages={standings} matches={matches} />
-      </div>
+      {/* Programul (stânga) și, în dreapta, clasamentul Top 6 cu golgheterul dedesubt. */}
+      <HomeSchedule
+        competition={competition}
+        competitions={competitions}
+        matches={matches}
+        standings={standings}
+        topScorer={scorers[0]?.row}
+      />
+      {afterSchedule}
       <HomeLeaders
         competition={competition}
         competitions={competitions}
