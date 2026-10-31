@@ -14,7 +14,7 @@ export const formatDay = (iso: string) => capitalize(dayFormat.format(new Date(i
 
 /** Panou verde închis care ține o listă de meciuri. */
 export function MatchPanel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-3xl bg-forest p-4 sm:p-7 ${className}`}>{children}</div>;
+  return <div className={`rounded-none bg-forest p-4 sm:p-7 ${className}`}>{children}</div>;
 }
 
 /**

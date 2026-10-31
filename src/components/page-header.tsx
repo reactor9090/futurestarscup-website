@@ -20,7 +20,7 @@ export function PageHeader({
       <div className="relative mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-6 px-4 py-12 sm:px-6 sm:py-16">
         <div>
           <Eyebrow className="text-lime">{eyebrow}</Eyebrow>
-          <h1 className="mt-3 font-display text-5xl font-extrabold leading-none tracking-tight text-white sm:text-6xl">
+          <h1 className="mt-3 font-display italic text-5xl font-extrabold leading-none tracking-tight text-white sm:text-6xl">
             {title}
           </h1>
           {description && <p className="mt-3 max-w-2xl text-white/65">{description}</p>}
@@ -35,7 +35,7 @@ export function PageHeader({
 export function UnderConstruction({ items }: { items: string[] }) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-      <div className="rounded-3xl border border-dashed border-line bg-surface p-6 sm:p-8">
+      <div className="rounded-none border border-dashed border-line bg-surface p-6 sm:p-8">
         <p className="font-display text-lg font-bold uppercase tracking-wide text-pitch-700">În construcție</p>
         <p className="mt-1 text-muted">Pe această pagină vor apărea:</p>
         <ul className="mt-4 space-y-2">

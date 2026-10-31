@@ -31,10 +31,11 @@
   --color-danger: #dc2626;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-barlow), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-display: var(--font-oswald), var(--font-inter), ui-sans-serif, sans-serif;
 }
 
 body {
   background: var(--color-canvas);
   color: var(--color-ink);
+  font-weight: 500; /* Inter Medium */ 
 }

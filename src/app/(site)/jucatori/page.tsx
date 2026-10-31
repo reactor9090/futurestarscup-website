@@ -20,7 +20,7 @@ export default function JucatoriPage({ searchParams }: PageProps<"/jucatori">) {
     <>
       <PageHeader eyebrow="Participanți" title="Jucători" description="Jucătorii fiecărei categorii și statisticile lor." />
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-10 sm:px-6">
-        <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-forest/5" />}>
+        <Suspense fallback={<div className="h-96 animate-pulse rounded-none bg-forest/5" />}>
           <Players searchParams={searchParams} />
         </Suspense>
       </div>
@@ -120,11 +120,13 @@ const statsOf = (p: PlayerCardRow) =>
 
 function PlayerCard({ player: p, place, value, unit }: { player: PlayerCardRow; place: number | null; value: number; unit: string }) {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-line bg-surface transition hover:-translate-y-0.5 hover:shadow-md">
+    <div className="flex h-full flex-col overflow-hidden rounded-none border border-line bg-surface transition hover:-translate-y-0.5 hover:shadow-md">
       {/* Banda de sus: locul, poza (cu acord) sau numărul, cifra sortării și echipa. */}
-      <div className="relative h-36 overflow-hidden bg-forest bg-[radial-gradient(ellipse_at_30%_0%,color-mix(in_oklab,var(--color-lime)_22%,transparent),transparent_65%)]">
+      <div className="relative h-44 overflow-hidden bg-forest bg-[radial-gradient(ellipse_at_30%_0%,color-mix(in_oklab,var(--color-lime)_22%,transparent),transparent_65%)]">
         {p.photo_url ? (
-          <Image src={p.photo_url} alt="" fill sizes="(min-width:1280px) 300px, 50vw" className="object-cover object-top" />
+          <div className="absolute inset-y-0 right-0 w-3/5 [mask-image:linear-gradient(to_bottom,black_65%,transparent),linear-gradient(to_left,black_55%,transparent)] [mask-composite:intersect]">
+            <Image src={p.photo_url} alt="" fill sizes="(min-width:1280px) 190px, 40vw" className="object-cover object-top" />
+          </div>
         ) : (
           <span className="absolute inset-0 grid place-items-center">
             <PlayerAvatar player={p} size={88} tone="dark" />
@@ -134,7 +136,7 @@ function PlayerCard({ player: p, place, value, unit }: { player: PlayerCardRow; 
         <span className="absolute left-3 top-3">
           <PlaceBadge position={place} size="sm" />
         </span>
-        <span className="absolute right-4 top-3 text-right">
+        <span className={`absolute top-3 ${p.photo_url ? "left-4 top-14 text-left" : "right-4 text-right"}`}>
           <span className="block font-display text-5xl font-extrabold tabular-nums leading-none text-lime">{value}</span>
           <span className="block text-[9px] font-bold uppercase tracking-wider text-white/70">{unit}</span>
         </span>

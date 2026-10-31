@@ -17,7 +17,7 @@ export default function PremiiPage({ searchParams }: PageProps<"/premii">) {
         description="Trofeele puse în joc, câștigătorii și partenerii campionatului."
       />
       <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6">
-        <Suspense fallback={<div className="h-48 animate-pulse rounded-3xl bg-forest/5" />}>
+        <Suspense fallback={<div className="h-48 animate-pulse rounded-none bg-forest/5" />}>
           <Prizes searchParams={searchParams} />
         </Suspense>
         <Suspense>
@@ -50,7 +50,7 @@ async function Prizes({ searchParams }: { searchParams: PageProps<"/premii">["se
             p.winner_text
           );
           return (
-            <li key={p.id} className="rounded-3xl border border-line bg-surface p-6">
+            <li key={p.id} className="rounded-none border border-line bg-surface p-6">
               <p className="font-display text-sm font-bold uppercase tracking-wider text-gold-600">🏆 {p.title}</p>
               {winner ? (
                 <p className="mt-4 font-display text-3xl font-extrabold leading-tight tracking-tight text-forest">{winner}</p>

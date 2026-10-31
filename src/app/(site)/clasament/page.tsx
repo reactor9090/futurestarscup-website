@@ -23,7 +23,7 @@ export default function ClasamentPage({ searchParams }: PageProps<"/clasament">)
         description="Clasamentul fiecărei categorii de vârstă, calculat automat după fiecare rezultat."
       />
       <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6">
-        <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-forest/5" />}>
+        <Suspense fallback={<div className="h-96 animate-pulse rounded-none bg-forest/5" />}>
           <Standings searchParams={searchParams} />
         </Suspense>
       </div>
@@ -91,7 +91,7 @@ async function Standings({ searchParams }: { searchParams: PageProps<"/clasament
           {current.table.rows.some((r) => r.played > 0) && (
             <Podium rows={current.table.rows.slice(0, 3)} champion={current.champion} />
           )}
-          <div className="overflow-hidden rounded-3xl border border-line bg-surface shadow-sm">
+          <div className="overflow-hidden rounded-none border border-line bg-surface shadow-sm">
             <StandingsRows rows={current.table.rows} />
             <StandingsLegend />
           </div>
@@ -155,7 +155,7 @@ function PodiumCard({ row, champion }: { row: StandingsRow; champion: boolean })
       )}
       <Link
         href={`/echipe/${row.team_id}`}
-        className={`relative flex flex-col items-center overflow-hidden rounded-3xl p-5 text-center transition hover:-translate-y-0.5 ${
+        className={`relative flex flex-col items-center overflow-hidden rounded-none p-5 text-center transition hover:-translate-y-0.5 ${
           first
             ? "bg-gradient-to-br from-lime to-[color-mix(in_oklab,var(--color-lime)_80%,var(--color-pitch-500))] text-forest shadow-[0_10px_40px_-10px_var(--color-lime)] md:py-8"
             : "bg-forest text-white"

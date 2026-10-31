@@ -19,7 +19,7 @@ export default function GolgheteriPage({ searchParams }: PageProps<"/golgheteri"
     <>
       <PageHeader eyebrow="Top jucători" title="Golgheteri" description="Cei mai buni marcatori și pasatori ai fiecărei categorii." />
       <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6">
-        <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-forest/5" />}>
+        <Suspense fallback={<div className="h-96 animate-pulse rounded-none bg-forest/5" />}>
           <TopScorers searchParams={searchParams} />
         </Suspense>
       </div>
@@ -153,7 +153,7 @@ function PodiumCard({ entry: { row: p, position }, slot }: { entry: Ranked[numbe
     <li className={order}>
       <Link
         href={`/jucatori/${p.player_id}`}
-        className={`relative flex items-center gap-4 overflow-hidden rounded-3xl p-4 transition hover:-translate-y-0.5 ${
+        className={`relative flex items-center gap-4 overflow-hidden rounded-none p-4 transition hover:-translate-y-0.5 ${
           top
             ? "bg-gradient-to-br from-lime to-[color-mix(in_oklab,var(--color-lime)_80%,var(--color-pitch-500))] text-forest shadow-[0_10px_40px_-10px_var(--color-lime)] md:py-6"
             : "bg-forest text-white"
@@ -233,7 +233,7 @@ function Board({
 }) {
   const shown = expanded ? rows : rows.slice(0, 5);
   return (
-    <div className="overflow-hidden rounded-3xl border border-line bg-surface shadow-sm">
+    <div className="overflow-hidden rounded-none border border-line bg-surface shadow-sm">
       <div className="flex items-center gap-3 px-5 py-4">
         <span className="grid size-11 place-items-center rounded-2xl bg-forest text-lime">
           <Icon d={icon} className="size-6" />

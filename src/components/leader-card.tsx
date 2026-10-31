@@ -18,7 +18,7 @@ export function LeaderCard({
   value: (p: PlayerStatRow) => number;
 }) {
   return (
-    <div className="rounded-3xl border border-line bg-surface">
+    <div className="rounded-none border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
         <h3 className="font-display text-2xl font-extrabold tracking-tight text-forest">{title}</h3>
         <span className="text-[11px] font-bold uppercase tracking-wider text-muted">{valueLabel}</span>

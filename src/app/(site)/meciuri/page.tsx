@@ -17,7 +17,7 @@ export default function MeciuriPage({ searchParams }: PageProps<"/meciuri">) {
     <>
       <PageHeader eyebrow="Program și rezultate" title="Meciuri" description="Programul și rezultatele, organizate pe etape." />
       <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6">
-        <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-forest/5" />}>
+        <Suspense fallback={<div className="h-96 animate-pulse rounded-none bg-forest/5" />}>
           <Matches searchParams={searchParams} />
         </Suspense>
       </div>
@@ -118,7 +118,7 @@ async function Matches({ searchParams }: { searchParams: PageProps<"/meciuri">["
       {!round ? (
         <EmptyState>Programul meciurilor va fi publicat în curând.</EmptyState>
       ) : (
-        <section className="rounded-3xl border border-line bg-surface p-3 shadow-sm sm:p-4">
+        <section className="rounded-none border border-line bg-surface p-3 shadow-sm sm:p-4">
           <div className="flex flex-wrap items-center justify-between gap-3 px-1 pb-4 pt-1 sm:px-2">
             <div className="flex items-center gap-4">
               <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-forest text-lime">
@@ -290,7 +290,7 @@ function RecentResults({
 
       <ul className="grid gap-4 md:grid-cols-2">
         {matches.map((m) => (
-          <li key={m.id} className="rounded-3xl border border-line bg-surface p-5">
+          <li key={m.id} className="rounded-none border border-line bg-surface p-5">
             <div className="flex items-center justify-between gap-3">
               <p className="truncate text-[11px] font-bold uppercase tracking-wider text-muted">
                 <span className="text-forest">{competitionLabel(competition)}</span>

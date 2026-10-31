@@ -55,7 +55,7 @@ function AnnouncementCard({ announcement: a, large = false }: { announcement: Pu
       </div>
     </>
   );
-  const box = "block h-full overflow-hidden rounded-3xl border border-line bg-surface";
+  const box = "block h-full overflow-hidden rounded-none border border-line bg-surface";
   return a.link_url ? (
     <a href={a.link_url} target="_blank" rel="noopener noreferrer" className={`${box} hover:border-forest`}>
       {content}

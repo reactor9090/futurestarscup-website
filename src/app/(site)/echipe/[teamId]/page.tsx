@@ -97,7 +97,7 @@ async function Team({ params }: { params: PageProps<"/echipe/[teamId]">["params"
           {players.length === 0 ? (
             <EmptyState>Lotul nu a fost publicat încă.</EmptyState>
           ) : (
-            <div className="overflow-x-auto rounded-3xl border border-line bg-surface">
+            <div className="overflow-x-auto rounded-none border border-line bg-surface">
               <table className="w-full min-w-[34rem] text-sm">
                 <thead className="bg-paper/60 text-[11px] font-bold uppercase tracking-wider text-muted">
                   <tr className="border-b border-line">

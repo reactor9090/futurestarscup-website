@@ -134,7 +134,7 @@ function TopScorerCard({ competition, player: p }: { competition: PublicCompetit
   ];
 
   return (
-    <aside className="relative flex flex-col overflow-hidden rounded-3xl border border-lime/25 bg-gradient-to-br from-forest-soft via-forest to-forest p-6 sm:p-7">
+    <aside className="relative flex flex-col overflow-hidden rounded-none border border-lime/25 bg-gradient-to-br from-forest-soft via-forest to-forest p-6 sm:p-7">
       <div className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-lime/15 blur-3xl" aria-hidden />
 
       {/* Poza (doar cu acord) sau numărul tricoului, în dreapta sus */}
@@ -241,7 +241,7 @@ export function HomeSchedule({
         </div>
 
         <div className={`mt-10 grid gap-5 ${topScorer ? "lg:grid-cols-[1fr_24rem]" : ""}`}>
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:p-7">
+          <div className="relative overflow-hidden rounded-none border border-white/10 bg-white/[0.03] p-4 sm:p-7">
             <span className="absolute left-0 top-8 h-24 w-1 rounded-r-full bg-lime" aria-hidden />
             {round ? (
               <>

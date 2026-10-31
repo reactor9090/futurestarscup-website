@@ -19,7 +19,7 @@ export function SectionHeader({
     <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
       <div>
         <Eyebrow>{eyebrow}</Eyebrow>
-        <h2 className="mt-2 font-display text-5xl font-extrabold leading-none tracking-tight text-forest sm:text-6xl">
+        <h2 className="mt-2 font-display italic text-5xl font-extrabold leading-none tracking-tight text-forest sm:text-6xl">
           {title}
         </h2>
       </div>
@@ -38,12 +38,12 @@ export function ArrowLink({ href, children, className = "" }: { href: string; ch
 }
 
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`rounded-3xl border border-line bg-surface ${className}`}>{children}</div>;
+  return <div className={`rounded-none border border-line bg-surface ${className}`}>{children}</div>;
 }
 
 export function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-3xl border border-dashed border-line bg-surface p-8 text-center text-muted">{children}</p>
+    <p className="rounded-none border border-dashed border-line bg-surface p-8 text-center text-muted">{children}</p>
   );
 }
 

@@ -36,7 +36,7 @@ function StandingsCard({
   href: string;
 }) {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-sm">
+    <div className="flex h-full flex-col overflow-hidden rounded-none border border-line bg-surface shadow-sm">
       <div className="flex items-center gap-4 bg-forest px-5 py-5 sm:px-7">
         <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-lime text-forest">
           <Icon d={icons.trophy} className="size-7" />
@@ -86,7 +86,7 @@ function LeaderCard({ row, label }: { row: Row; label: string }) {
     ["Puncte", row.points],
   ] as const;
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-forest p-6">
+    <div className="relative overflow-hidden rounded-none bg-forest p-6">
       <div className="pointer-events-none absolute -right-12 -top-12 size-56 rounded-full bg-lime/15 blur-3xl" aria-hidden />
       <span className="relative flex w-fit items-center gap-1.5 rounded-full bg-lime px-3 py-1.5 text-[11px] font-bold text-forest">
         <Icon d={icons.crown} className="size-3.5" />
@@ -120,7 +120,7 @@ function QuickStats({ matches, teams, href }: { matches: PublicMatch[]; teams: n
     { label: "Echipe", value: teams, note: "în competiție", icon: icons.users },
   ];
   return (
-    <div className="rounded-3xl border border-line bg-surface p-5">
+    <div className="rounded-none border border-line bg-surface p-5">
       <h3 className="flex items-center gap-2 font-bold text-forest">
         <Icon d={icons.chart} className="size-5" />
         Statistici rapide

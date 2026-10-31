@@ -21,7 +21,7 @@ export default function EchipePage({ searchParams }: PageProps<"/echipe">) {
         description="Descoperă toate echipele din campionat, statisticile și loturile lor."
       />
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-10 sm:px-6">
-        <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-forest/5" />}>
+        <Suspense fallback={<div className="h-96 animate-pulse rounded-none bg-forest/5" />}>
           <Teams searchParams={searchParams} />
         </Suspense>
       </div>
@@ -131,7 +131,7 @@ function TeamCard({ team }: { team: PublicTeam }) {
   const leader = team.position === 1 && team.played > 0;
   return (
     <div
-      className={`relative flex h-full flex-col items-center rounded-3xl border bg-surface p-4 text-center transition hover:-translate-y-0.5 hover:shadow-md ${
+      className={`relative flex h-full flex-col items-center rounded-none border bg-surface p-4 text-center transition hover:-translate-y-0.5 hover:shadow-md ${
         leader ? "border-lime shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-lime)_35%,transparent)]" : "border-line"
       }`}
     >

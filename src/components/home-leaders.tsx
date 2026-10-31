@@ -109,7 +109,7 @@ function LeaderBoard({
 }) {
   const [first, ...rest] = rows.slice(0, 5);
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
+    <div className="relative overflow-hidden rounded-none border border-white/10 bg-white/[0.03] p-4 sm:p-6">
       <span className="absolute left-0 top-8 h-24 w-1 rounded-r-full bg-lime" aria-hidden />
       <div className="flex items-center gap-4">
         <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-lime text-forest">
@@ -226,7 +226,7 @@ export function HomeLeaders({
           />
         </div>
 
-        <dl className="mt-5 grid grid-cols-2 rounded-3xl border border-white/10 bg-white/[0.03] lg:grid-cols-4">
+        <dl className="mt-5 grid grid-cols-2 rounded-none border border-white/10 bg-white/[0.03] lg:grid-cols-4">
           {figures.map((f, i) => (
             <div
               key={f.label}

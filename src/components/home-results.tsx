@@ -45,7 +45,7 @@ function ResultCard({ match: m }: { match: RecentResult }) {
   ] as const;
 
   return (
-    <li className="rounded-3xl border border-line bg-surface p-5 transition hover:border-forest/30 hover:shadow-sm">
+    <li className="rounded-none border border-line bg-surface p-5 transition hover:border-forest/30 hover:shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-[11px] font-bold uppercase tracking-wider text-muted">
@@ -159,7 +159,7 @@ export async function HomeResults({ searchParams }: { searchParams: Promise<Para
       </div>
 
       {results.length === 0 ? (
-        <p className="mt-6 rounded-3xl border border-dashed border-line bg-surface p-8 text-center text-muted">
+        <p className="mt-6 rounded-none border border-dashed border-line bg-surface p-8 text-center text-muted">
           Niciun rezultat încă {category ? `la ${category}` : ""} în sezonul {season}.
         </p>
       ) : (
