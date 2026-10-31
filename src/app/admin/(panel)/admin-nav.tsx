@@ -12,6 +12,7 @@ export const adminSections: { href: string; label: string; soon?: boolean }[] = 
   { href: "/admin/meciuri", label: "Meciuri și rezultate" },
   { href: "/admin/inscrieri", label: "Înscrieri" },
   { href: "/admin/continut", label: "Anunțuri, sponsori, premii" },
+  { href: "/admin/jucatorul-etapei", label: "Jucătorul etapei" },
 ];
 
 export function AdminNav() {

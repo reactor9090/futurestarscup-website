@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
@@ -7,7 +8,7 @@ import { Card, Field, inputClass } from "@/components/admin/fields";
 import { positionLabels, type Position } from "@/lib/labels";
 import { createSessionClient } from "@/lib/supabase/server";
 import { ClubLogo } from "../club-card";
-import { addPlayer, removePlayer, updatePlayer } from "./actions";
+import { addPlayer, removePlayer, removePlayerPhoto, setPlayerPhoto, updatePlayer } from "./actions";
 
 export const metadata: Metadata = { title: "Lot echipă", robots: { index: false } };
 
@@ -18,7 +19,14 @@ type TeamData = {
   competition: { name: string; min_birth_year: number | null; max_birth_year: number | null } | null;
   roster_entries: {
     shirt_number: number | null;
-    player: { id: string; first_name: string; last_name: string; birth_year: number | null; position: Position | null };
+    player: {
+      id: string;
+      first_name: string;
+      last_name: string;
+      birth_year: number | null;
+      position: Position | null;
+      photo_url: string | null;
+    };
   }[];
 };
 
@@ -32,7 +40,7 @@ export default async function TeamRosterPage({ params }: PageProps<"/admin/echip
     .select(
       `id, name, club:clubs(id, name, logo_url),
        competition:competitions(name, min_birth_year, max_birth_year),
-       roster_entries(shirt_number, player:players(id, first_name, last_name, birth_year, position))`,
+       roster_entries(shirt_number, player:players(id, first_name, last_name, birth_year, position, photo_url))`,
     )
     .eq("id", teamId)
     .maybeSingle()
@@ -95,6 +103,7 @@ export default async function TeamRosterPage({ params }: PageProps<"/admin/echip
                     )}
                   </div>
                 </ActionForm>
+                <PlayerPhoto teamId={team.id} player={player} />
                 <ActionForm action={removePlayer}>
                   <input type="hidden" name="team_id" value={team.id} />
                   <input type="hidden" name="player_id" value={player.id} />
@@ -108,6 +117,45 @@ export default async function TeamRosterPage({ params }: PageProps<"/admin/echip
           {roster.length === 0 && <li className="text-sm text-muted">Lotul e gol. Adaugă primul jucător mai sus.</li>}
         </ul>
       </Card>
+    </div>
+  );
+}
+
+/** Poza de pe profilul public; se încarcă doar cu acordul părinților. */
+function PlayerPhoto({ teamId, player }: { teamId: string; player: TeamData["roster_entries"][number]["player"] }) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg bg-canvas p-2">
+      {player.photo_url ? (
+        <Image src={player.photo_url} alt="" width={48} height={48} className="size-12 rounded-full object-cover" />
+      ) : (
+        <span className="grid size-12 place-items-center rounded-full bg-line text-xs text-muted">fără</span>
+      )}
+      <ActionForm action={setPlayerPhoto} className="flex flex-wrap items-center gap-3" resetOnSuccess>
+        <input type="hidden" name="team_id" value={teamId} />
+        <input type="hidden" name="player_id" value={player.id} />
+        <input
+          name="photo"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          required
+          aria-label="Poză jucător"
+          className="block max-w-56 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-pitch-100 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-pitch-900"
+        />
+        <label className="flex items-center gap-2 text-xs">
+          <input name="photo_consent" type="checkbox" required className="size-4 accent-pitch-700" />
+          Părinții au fost de acord cu publicarea
+        </label>
+        <SubmitButton variant="secondary">{player.photo_url ? "Înlocuiește poza" : "Încarcă poza"}</SubmitButton>
+      </ActionForm>
+      {player.photo_url && (
+        <ActionForm action={removePlayerPhoto}>
+          <input type="hidden" name="team_id" value={teamId} />
+          <input type="hidden" name="player_id" value={player.id} />
+          <SubmitButton variant="ghost" confirm="Ștergi poza? Acordul pentru publicare se retrage.">
+            Șterge poza
+          </SubmitButton>
+        </ActionForm>
+      )}
     </div>
   );
 }

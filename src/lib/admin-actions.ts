@@ -14,13 +14,13 @@ export const optionalInt = (min: number, max: number, message: string) =>
     .transform((v) => (v === "" ? null : Number(v)))
     .pipe(z.number(message).int(message).min(min, message).max(max, message).nullable());
 
-/** Text opțional: gol → null. */
+/** Text opțional: gol sau câmp lipsă din formular → null. */
 export const optionalText = (max: number, message: string) =>
   z
     .string()
-    .trim()
-    .max(max, message)
-    .transform((v) => v || null);
+    .optional()
+    .transform((v) => v?.trim() || null)
+    .pipe(z.string().max(max, message).nullable());
 
 export function firstError(error: z.ZodError): FormState {
   return { error: error.issues[0].message };

@@ -157,6 +157,22 @@ describe("securitate (RLS)", () => {
     });
   });
 
+  it("jucătorul etapei: vizitatorul vede doar ce e publicat și nu poate scrie", async () => {
+    await db.exec(`
+      insert into round_awards (competition_id, round, title, player_id, team_id, is_published)
+      select t.competition_id, n, 'Jucătorul etapei ' || n, r.player_id, t.id, n = 1
+      from teams t join roster_entries r on r.team_id = t.id and r.shirt_number = 7
+      cross join generate_series(1, 2) n
+      where t.name = 'Viitorul Chișinău'`);
+    await as("anon", null, async () => {
+      expect((await one<{ n: number }>(`select count(*)::int n from round_awards`)).n).toBe(1);
+      await expect(
+        db.exec(`insert into round_awards (competition_id, title, player_id, team_id)
+                 select competition_id, 'x', player_id, team_id from round_awards limit 1`),
+      ).rejects.toThrow();
+    });
+  });
+
   it("adminul poate scrie", async () => {
     await as("authenticated", ADMIN_ID, async () => {
       await db.exec(`insert into categories (name, slug, sort_order) values ('U14', 'u14', 14)`);

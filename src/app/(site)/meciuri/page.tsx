@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { MatchCard } from "@/components/match-card";
 import { CompetitionPicker, EmptyState } from "@/components/competition-picker";
+import { formatDay, MatchPanel, MatchRow } from "@/components/match-row";
 import { PageHeader } from "@/components/page-header";
+import { Segmented } from "@/components/ui";
 import { getCompetitions, getMatches, pickCompetition, type PublicMatch } from "@/lib/public-data";
+import { currentRound, groupRounds } from "@/lib/rounds";
 
 export const metadata: Metadata = { title: "Meciuri" };
 
 export default function MeciuriPage({ searchParams }: PageProps<"/meciuri">) {
   return (
     <>
-      <PageHeader title="Meciuri" description="Programul și rezultatele, organizate pe faze și etape." />
-      <div className="mx-auto max-w-4xl space-y-8 px-4 py-10 sm:px-6">
-        <Suspense fallback={<p className="text-muted">Se încarcă…</p>}>
+      <PageHeader eyebrow="Program și rezultate" title="Meciuri" description="Programul și rezultatele, pe etape." />
+      <div className="mx-auto max-w-5xl space-y-6 px-4 py-10 sm:px-6">
+        <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-forest/5" />}>
           <Matches searchParams={searchParams} />
         </Suspense>
       </div>
@@ -20,50 +22,60 @@ export default function MeciuriPage({ searchParams }: PageProps<"/meciuri">) {
   );
 }
 
-
-/** Etapa unui meci ca titlu de secțiune: eticheta („Finala”), „Etapa 3” sau „Alte meciuri”. */
-const roundTitle = (m: PublicMatch) => m.round_label ?? (m.round ? `Etapa ${m.round}` : "Alte meciuri");
+const dayKey = (m: PublicMatch) => (m.kickoff_at ? formatDay(m.kickoff_at) : "Data nestabilită");
 
 async function Matches({ searchParams }: { searchParams: PageProps<"/meciuri">["searchParams"] }) {
-  const { competitie } = await searchParams;
+  const { competitie, etapa } = await searchParams;
   const competitions = await getCompetitions();
   const selected = pickCompetition(competitions, competitie);
   if (!selected) return <EmptyState>Nicio competiție publicată încă.</EmptyState>;
 
-  const matches = await getMatches(selected.id);
+  const rounds = groupRounds(await getMatches(selected.id));
+  const round = rounds.find((r) => r.key === etapa) ?? currentRound(rounds);
+  const multipleStages = new Set(rounds.map((r) => r.stageName)).size > 1;
 
-  // Faze în ordinea lor, apoi etape în ordinea apariției (meciurile vin sortate după dată).
-  const stages = new Map<string, { order: number; rounds: Map<string, PublicMatch[]> }>();
-  for (const m of matches) {
-    const name = m.stage?.name ?? "Meciuri";
-    const stage = stages.get(name) ?? { order: m.stage?.sort_order ?? 0, rounds: new Map() };
-    const title = roundTitle(m);
-    stage.rounds.set(title, [...(stage.rounds.get(title) ?? []), m]);
-    stages.set(name, stage);
-  }
-  const orderedStages = [...stages].sort((a, b) => a[1].order - b[1].order);
+  // În cadrul etapei, meciurile pe zile (o etapă se poate juca în mai multe zile).
+  const days = new Map<string, PublicMatch[]>();
+  for (const m of round?.matches ?? []) days.set(dayKey(m), [...(days.get(dayKey(m)) ?? []), m]);
 
   return (
     <>
       <CompetitionPicker basePath="/meciuri" competitions={competitions} selectedId={selected.id} />
-      {matches.length === 0 && <EmptyState>Programul meciurilor va fi publicat în curând.</EmptyState>}
-      {orderedStages.map(([stageName, stage]) => (
-        <section key={stageName} className="space-y-6">
-          {orderedStages.length > 1 && (
-            <h2 className="font-display text-2xl font-bold uppercase tracking-wide">{stageName}</h2>
+      {!round ? (
+        <EmptyState>Programul meciurilor va fi publicat în curând.</EmptyState>
+      ) : (
+        <>
+          {rounds.length > 1 && (
+            <Segmented
+              label="Etape"
+              options={rounds.map((r) => ({
+                href: `/meciuri?competitie=${selected.id}&etapa=${r.key}`,
+                label: multipleStages && r.stageName ? `${r.title} · ${r.stageName}` : r.title,
+                active: r.key === round.key,
+              }))}
+            />
           )}
-          {[...stage.rounds].map(([title, list]) => (
-            <div key={title} className="space-y-2">
-              <h3 className="font-display text-lg font-bold uppercase tracking-wide text-pitch-700">{title}</h3>
-              <ul className="space-y-2">
-                {list.map((m) => (
-                  <MatchCard key={m.id} match={m} />
-                ))}
-              </ul>
+          <MatchPanel>
+            <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-white/10 pb-4">
+              <h2 className="font-display text-3xl font-extrabold tracking-tight text-white">{round.title}</h2>
+              <span className="text-xs font-semibold text-white/50">
+                {round.stageName && multipleStages ? `${round.stageName} · ` : ""}
+                {round.matches.length} {round.matches.length === 1 ? "meci" : "meciuri"}
+              </span>
             </div>
-          ))}
-        </section>
-      ))}
+            {[...days].map(([day, list]) => (
+              <div key={day} className="mt-5">
+                <p className="mb-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-lime">{day}</p>
+                <ul className="space-y-2.5">
+                  {list.map((m) => (
+                    <MatchRow key={m.id} match={m} />
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </MatchPanel>
+        </>
+      )}
     </>
   );
 }

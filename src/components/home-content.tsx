@@ -13,7 +13,7 @@ export async function Announcements() {
 
   return (
     <section className="mx-auto max-w-7xl space-y-6 px-4 pt-12 sm:px-6">
-      <h2 className="font-display text-3xl font-bold uppercase tracking-wide">Noutăți</h2>
+      <h2 className="font-display text-5xl font-extrabold leading-none tracking-tight text-forest sm:text-6xl">Noutăți</h2>
       {banners.length > 0 && (
         <ul className="flex snap-x gap-4 overflow-x-auto pb-2">
           {banners.map((a) => (
@@ -50,14 +50,14 @@ function AnnouncementCard({ announcement: a, large = false }: { announcement: Pu
       )}
       <div className="space-y-1 p-4">
         <p className="text-xs text-muted">{date.format(new Date(a.published_at))}</p>
-        <h3 className="font-display text-xl font-bold uppercase tracking-wide">{a.title}</h3>
+        <h3 className="font-display text-2xl font-extrabold tracking-tight text-forest">{a.title}</h3>
         {a.body && <p className="whitespace-pre-line text-sm text-muted">{a.body}</p>}
       </div>
     </>
   );
-  const box = "block h-full overflow-hidden rounded-xl border border-line bg-surface";
+  const box = "block h-full overflow-hidden rounded-3xl border border-line bg-surface";
   return a.link_url ? (
-    <a href={a.link_url} target="_blank" rel="noopener noreferrer" className={`${box} hover:border-pitch-500`}>
+    <a href={a.link_url} target="_blank" rel="noopener noreferrer" className={`${box} hover:border-forest`}>
       {content}
     </a>
   ) : (
@@ -70,7 +70,7 @@ export async function HomeSponsors() {
   if (sponsors.length === 0) return null;
   return (
     <section className="mx-auto max-w-7xl space-y-4 px-4 pb-4 pt-12 sm:px-6">
-      <h2 className="font-display text-3xl font-bold uppercase tracking-wide">Parteneri</h2>
+      <h2 className="font-display text-5xl font-extrabold leading-none tracking-tight text-forest sm:text-6xl">Parteneri</h2>
       <SponsorsStrip sponsors={sponsors} />
     </section>
   );

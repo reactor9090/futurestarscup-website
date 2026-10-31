@@ -1,37 +1,39 @@
-import Link from "next/link";
+import { Segmented } from "@/components/ui";
 import type { PublicCompetition } from "@/lib/public-data";
 
+/** Eticheta scurtă: categoria pentru sezonul curent, numele complet pentru sezoanele vechi. */
+export const competitionLabel = (c: PublicCompetition) =>
+  c.season?.is_current && c.category ? c.category.name : c.name;
+
 // Alegerea categoriei de vârstă; selecția stă în adresă (?competitie=id), deci se poate trimite ca link.
+// `params` păstrează ceilalți parametri ai paginii (ex. vederea), `anchor` readuce pagina la secțiune.
 export function CompetitionPicker({
   basePath,
   competitions,
   selectedId,
+  params = {},
+  anchor,
+  className,
 }: {
   basePath: string;
   competitions: PublicCompetition[];
   selectedId: string;
+  params?: Record<string, string>;
+  anchor?: string;
+  className?: string;
 }) {
   if (competitions.length < 2) return null;
   return (
-    <nav className="flex flex-wrap gap-2" aria-label="Categorie">
-      {competitions.map((c) => (
-        <Link
-          key={c.id}
-          href={`${basePath}?competitie=${c.id}`}
-          aria-current={c.id === selectedId ? "page" : undefined}
-          className={`rounded-full border px-4 py-1.5 text-sm font-semibold ${
-            c.id === selectedId ? "border-pitch-700 bg-pitch-700 text-white" : "border-line bg-surface hover:bg-canvas"
-          }`}
-        >
-          {c.name}
-        </Link>
-      ))}
-    </nav>
+    <Segmented
+      label="Categorie"
+      className={className}
+      options={competitions.map((c) => ({
+        href: `${basePath}?${new URLSearchParams({ ...params, competitie: c.id })}${anchor ? `#${anchor}` : ""}`,
+        label: competitionLabel(c),
+        active: c.id === selectedId,
+      }))}
+    />
   );
 }
 
-export function EmptyState({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="rounded-xl border border-dashed border-line bg-surface p-6 text-center text-muted">{children}</p>
-  );
-}
+export { EmptyState } from "@/components/ui";

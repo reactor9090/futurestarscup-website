@@ -637,6 +637,29 @@ create policy "media_admin_update" on storage.objects
 create policy "media_admin_delete" on storage.objects
   for delete to authenticated using (bucket_id = 'media' and public.is_admin());
 
+-- ===== supabase/migrations/20261101000001_round_awards.sql =====
+-- Jucătorul etapei: ales de organizatori, apare în caruselul de pe prima pagină.
+-- Poza vine din `players.photo_url` (doar cu acordul părinților), sponsorul din `sponsors`.
+
+create table round_awards (
+  id             uuid primary key default gen_random_uuid(),
+  competition_id uuid not null references competitions (id) on delete cascade,
+  round          int check (round > 0),            -- etapa; null = premiu fără etapă
+  title          text not null,                    -- ex. „Jucătorul etapei 1”
+  player_id      uuid not null references players (id) on delete restrict,
+  team_id        uuid not null references teams (id) on delete restrict,
+  body           text,
+  sponsor_id     uuid references sponsors (id) on delete set null,
+  is_published   boolean not null default true,
+  sort_order     int not null default 0,
+  created_at     timestamptz not null default now()
+);
+create index round_awards_competition_idx on round_awards (competition_id);
+
+alter table round_awards enable row level security;
+create policy "admin_write" on round_awards for all to authenticated using (is_admin()) with check (is_admin());
+create policy "public_read" on round_awards for select using (is_published or is_admin());
+
 -- ===== supabase/seed.sql =====
 -- Date demo pentru dezvoltare. NU se rulează în producție.
 -- U12: campionat (toți cu toți), 4 echipe, 3 etape (2 jucate, 1 programată).

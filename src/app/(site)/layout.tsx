@@ -25,8 +25,8 @@ const footerLinks = [
 
 export default function SiteLayout({ children }: LayoutProps<"/">) {
   return (
-    <>
-      <header className="sticky top-0 z-40 bg-pitch-950">
+    <div className="flex flex-1 flex-col bg-paper">
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-forest">
         <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Logo />
           <Suspense>
@@ -37,7 +37,7 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
 
       <main className="flex-1">{children}</main>
 
-      <footer className="mt-16 bg-pitch-950 text-pitch-100/70">
+      <footer className="mt-16 bg-forest text-white/60">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-3">
           <div className="space-y-3">
             <Logo />
@@ -47,7 +47,7 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
           </div>
           {footerLinks.map((col) => (
             <div key={col.title}>
-              <h2 className="font-display text-sm font-bold uppercase tracking-wider text-white">{col.title}</h2>
+              <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-lime">{col.title}</h2>
               <ul className="mt-3 space-y-2 text-sm">
                 {col.links.map((link) => (
                   <li key={link.href}>
@@ -62,6 +62,6 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
         </div>
         <div className="border-t border-white/10 py-4 text-center text-xs">© Future Stars Cup</div>
       </footer>
-    </>
+    </div>
   );
 }

@@ -15,3 +15,42 @@ export function ClubLogo({ url, size = 40 }: { url: string | null; size?: number
     </span>
   );
 }
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+
+/** Logo-ul echipei sau, dacă lipsește, inițialele ei într-un pătrat rotunjit. */
+export function TeamBadge({
+  url,
+  name,
+  size = 32,
+  tone = "light",
+}: {
+  url: string | null;
+  name: string;
+  size?: number;
+  tone?: "light" | "dark";
+}) {
+  if (url) {
+    return (
+      <Image src={url} alt="" width={size} height={size} className="shrink-0 rounded-lg bg-white object-contain" style={{ width: size, height: size }} />
+    );
+  }
+  return (
+    <span
+      className={`grid shrink-0 place-items-center rounded-lg border text-[10px] font-extrabold tracking-wide ${
+        tone === "dark" ? "border-lime/30 bg-lime/10 text-lime" : "border-pitch-700/10 bg-pitch-50 text-pitch-800"
+      }`}
+      style={{ width: size, height: size }}
+      aria-hidden
+    >
+      {initials(name)}
+    </span>
+  );
+}

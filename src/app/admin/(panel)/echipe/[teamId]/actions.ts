@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { FormState } from "@/components/admin/action-form";
 import { dbError, firstError, idSchema, optionalInt, refresh } from "@/lib/admin-actions";
 import { requireAdmin } from "@/lib/auth";
+import { pickedFile, removeImage, uploadImage } from "@/lib/media";
 
 const positions = ["portar", "fundas", "mijlocas", "atacant"] as const;
 
@@ -84,6 +85,56 @@ export async function updatePlayer(_prev: FormState, formData: FormData): Promis
   return { ok: "Salvat" };
 }
 
+const photoTarget = z.object({ team_id: idSchema, player_id: idSchema });
+
+/** Încarcă poza jucătorului; se publică doar cu acordul părinților bifat. */
+export async function setPlayerPhoto(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { supabase } = await requireAdmin();
+  const parsed = photoTarget.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: "Jucător invalid" };
+  const { team_id, player_id } = parsed.data;
+  if (formData.get("photo_consent") !== "on") {
+    return { error: "Bifează că părinții și-au dat acordul pentru publicarea pozei." };
+  }
+  const file = pickedFile(formData, "photo");
+  if (!file) return { error: "Alege o poză" };
+
+  const current = await supabase.from("players").select("photo_url").eq("id", player_id).single();
+  if (current.error) return dbError(current.error, "");
+
+  const uploaded = await uploadImage(supabase, "players", file);
+  if ("error" in uploaded) return uploaded;
+  const { error } = await supabase
+    .from("players")
+    .update({ photo_url: uploaded.url, photo_consent: true })
+    .eq("id", player_id);
+  if (error) {
+    await removeImage(supabase, uploaded.url);
+    return dbError(error, "");
+  }
+  await removeImage(supabase, current.data.photo_url);
+
+  refresh(`/admin/echipe/${team_id}`, "teams", "content");
+  return { ok: "Poză salvată" };
+}
+
+/** Șterge poza și retrage acordul (poza nu mai apare nicăieri pe site). */
+export async function removePlayerPhoto(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { supabase } = await requireAdmin();
+  const parsed = photoTarget.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: "Jucător invalid" };
+  const { team_id, player_id } = parsed.data;
+
+  const current = await supabase.from("players").select("photo_url").eq("id", player_id).single();
+  if (current.error) return dbError(current.error, "");
+  const { error } = await supabase.from("players").update({ photo_url: null, photo_consent: false }).eq("id", player_id);
+  if (error) return dbError(error, "");
+  await removeImage(supabase, current.data.photo_url);
+
+  refresh(`/admin/echipe/${team_id}`, "teams", "content");
+  return { ok: "Poză ștearsă" };
+}
+
 export async function removePlayer(_prev: FormState, formData: FormData): Promise<FormState> {
   const { supabase } = await requireAdmin();
   const parsed = z.object({ team_id: idSchema, player_id: idSchema }).safeParse(Object.fromEntries(formData));
@@ -113,7 +164,10 @@ export async function removePlayer(_prev: FormState, formData: FormData): Promis
 
   // Fără alt lot, persoana nu mai are rost în baza de date.
   const other = await supabase.from("roster_entries").select("team_id", { count: "exact", head: true }).eq("player_id", player_id);
-  if (!other.count) await supabase.from("players").delete().eq("id", player_id);
+  if (!other.count) {
+    const deleted = await supabase.from("players").delete().eq("id", player_id).select("photo_url").maybeSingle();
+    if (!deleted.error) await removeImage(supabase, deleted.data?.photo_url ?? null);
+  }
 
   refresh(`/admin/echipe/${team_id}`, "teams");
   return { ok: "Jucător scos din lot" };

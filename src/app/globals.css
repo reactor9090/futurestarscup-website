@@ -22,6 +22,12 @@
   --color-gold-500: #f5b700;
   --color-gold-600: #b88600;
 
+  /* Pagina de start: verde închis, lime și fundal cald */
+  --color-forest: #0b261c;
+  --color-forest-soft: #12372a;
+  --color-lime: #d9f43f;
+  --color-paper: #f3f4ee;
+
   --color-danger: #dc2626;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
