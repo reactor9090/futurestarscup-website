@@ -660,6 +660,11 @@ alter table round_awards enable row level security;
 create policy "admin_write" on round_awards for all to authenticated using (is_admin()) with check (is_admin());
 create policy "public_read" on round_awards for select using (is_published or is_admin());
 
+-- ===== supabase/migrations/20261101000002_live_status.sql =====
+-- Meci în desfășurare: scorul live se vede pe site, dar clasamentul și statisticile
+-- iau în calcul doar meciurile terminate (view-urile filtrează pe 'finished').
+alter type match_status add value if not exists 'live' after 'scheduled';
+
 -- ===== supabase/seed.sql =====
 -- Date demo pentru dezvoltare. NU se rulează în producție.
 -- U12: campionat (toți cu toți), 4 echipe, 3 etape (2 jucate, 1 programată).

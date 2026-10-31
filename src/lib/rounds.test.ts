@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { currentRound, groupRounds } from "./rounds";
 
-type Status = "scheduled" | "finished" | "postponed" | "cancelled";
+type Status = "scheduled" | "live" | "finished" | "postponed" | "cancelled";
 const match = (round: number | null, status: Status, stage = 0, label: string | null = null) => ({
   round,
   round_label: label,
@@ -29,6 +29,11 @@ describe("currentRound", () => {
   it("alege prima etapă cu meciuri de jucat", () => {
     const rounds = groupRounds([match(1, "finished"), match(2, "scheduled"), match(3, "scheduled")]);
     expect(currentRound(rounds)?.key).toBe("0-2");
+  });
+
+  it("o etapă cu un meci live e etapa curentă", () => {
+    const rounds = groupRounds([match(1, "finished"), match(1, "live"), match(2, "scheduled")]);
+    expect(currentRound(rounds)?.key).toBe("0-1");
   });
 
   it("alege ultima etapă când totul s-a jucat, null fără meciuri", () => {

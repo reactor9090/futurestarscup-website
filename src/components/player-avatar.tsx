@@ -4,9 +4,12 @@ import Image from "next/image";
 export function PlayerAvatar({
   player: p,
   size,
+  tone = "light",
 }: {
   player: { first_name: string; last_name: string; photo_url: string | null; shirt_number?: number | null };
   size: number;
+  /** `dark` pe fundal verde închis. */
+  tone?: "light" | "dark";
 }) {
   if (p.photo_url) {
     return (
@@ -22,7 +25,7 @@ export function PlayerAvatar({
   }
   return (
     <span
-      className="grid shrink-0 place-items-center rounded-full bg-forest font-display font-extrabold text-lime ring-4 ring-paper"
+      className={`grid shrink-0 place-items-center rounded-full font-display font-extrabold text-lime ${tone === "dark" ? "bg-lime/10 ring-2 ring-lime/35" : "bg-forest ring-4 ring-paper"}`}
       style={{ width: size, height: size, fontSize: size * 0.38 }}
       aria-hidden
     >

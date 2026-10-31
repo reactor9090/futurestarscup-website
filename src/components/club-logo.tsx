@@ -16,7 +16,7 @@ export function ClubLogo({ url, size = 40 }: { url: string | null; size?: number
   );
 }
 
-const initials = (name: string) =>
+export const initials = (name: string) =>
   name
     .split(/\s+/)
     .filter(Boolean)
@@ -44,10 +44,11 @@ export function TeamBadge({
   }
   return (
     <span
-      className={`grid shrink-0 place-items-center rounded-lg border text-[10px] font-extrabold tracking-wide ${
+      className={`grid shrink-0 place-items-center border font-extrabold ${size >= 56 ? "rounded-2xl tracking-wide" : size < 28 ? "rounded-md tracking-tight" : "rounded-lg tracking-wide"} ${
         tone === "dark" ? "border-lime/30 bg-lime/10 text-lime" : "border-pitch-700/10 bg-pitch-50 text-pitch-800"
       }`}
-      style={{ width: size, height: size }}
+      // Textul crește odată cu insigna, ca inițialele să nu se piardă într-un pătrat mare.
+      style={{ width: size, height: size, fontSize: Math.round(size < 28 ? size * 0.4 : size * 0.3) }}
       aria-hidden
     >
       {initials(name)}

@@ -155,6 +155,7 @@ function MatchRow({
   teamName: Map<string, string>;
 }) {
   const finished = match.status === "finished";
+  const hasScore = finished || match.status === "live";
   const penalties =
     finished && match.home_penalties !== null && match.away_penalties !== null
       ? ` (${match.home_penalties}–${match.away_penalties} d.l.d.)`
@@ -167,7 +168,7 @@ function MatchRow({
         <span className="min-w-0 flex-1 font-semibold">
           {teamName.get(match.home_team_id)}{" "}
           <span className="mx-1 rounded bg-canvas px-2 py-0.5 text-sm tabular-nums">
-            {finished ? `${match.home_score} – ${match.away_score}` : "vs"}
+            {hasScore ? `${match.home_score} – ${match.away_score}` : "vs"}
           </span>{" "}
           {teamName.get(match.away_team_id)}
           {penalties && <span className="text-sm font-normal text-muted">{penalties}</span>}
@@ -175,7 +176,11 @@ function MatchRow({
         <span className="text-sm text-muted">
           {[round, formatKickoff(match.kickoff_at), match.venue].filter(Boolean).join(" · ")}
         </span>
-        {!finished && <span className="rounded bg-gold-100 px-2 py-0.5 text-xs font-medium">{statusLabel[match.status]}</span>}
+        {match.status === "live" ? (
+          <span className="rounded bg-red-600 px-2 py-0.5 text-xs font-bold text-white">● LIVE</span>
+        ) : (
+          !finished && <span className="rounded bg-gold-100 px-2 py-0.5 text-xs font-medium">{statusLabel[match.status]}</span>
+        )}
       </summary>
       <div className="space-y-4 border-t border-line px-4 py-4">
         <ActionForm action={updateMatch} className="space-y-4">

@@ -48,3 +48,8 @@ export function formatKickoff(iso: string | null): string {
     minute: "2-digit",
   }).format(new Date(iso));
 }
+
+/** Ora a trecut deja (ex. un meci care trebuia să înceapă). */
+export function isPast(iso: string | null): boolean {
+  return iso !== null && new Date(iso).getTime() < Date.now();
+}

@@ -84,4 +84,8 @@ The plan is in `~/.claude/plans/uite-acum-as-kind-rivest.md`. The user compared 
   - `/echipe` and `/jucatori`: card grids with `?q`, `?sort` and `?echipa`.
   - `/jucatori/[playerId]`: player profile from `getPlayerProfile`.
 - **Player photos:** a photo is public only when `players.photo_consent` is set. `getPlayerStats`, `getPlayerProfile` and `getRoundAwards` null it otherwise. Admin uploads it per player in `/admin/echipe/[teamId]`, which requires the consent checkbox, and removing it clears consent.
+- **Live matches:** `match_status` has a `live` value (migration `20261101000002`). The admin starts it manually with "▶ Începe meciul" on `/admin/meciuri/[matchId]`; there is no automatic start by time because kickoffs run late, but a late scheduled match shows a reminder. While a match is live:
+  - adding or deleting a goal or own goal moves the stored score by ±1 (`adjustLiveScore`);
+  - "■ Termină meciul" sets the match to `finished`.
+  Stats and standings count only finished matches. The public `MatchRow` shows a red LIVE score, and `currentRound` treats live like scheduled.
 - **Round awards:** the `round_awards` table (migration `20261101000001`) is managed in `/admin/jucatorul-etapei`. The player is picked as `team:player` and must be in that team's roster. The sponsor comes from `sponsors`.

@@ -23,7 +23,7 @@ const matchSchema = z.object({
   kickoff_at: z.string().trim().transform((v) => (v ? fromLocalInput(v) : null)),
   venue: optionalText(80, "Locația e prea lungă"),
   notes: optionalText(500, "Observațiile sunt prea lungi"),
-  status: z.enum(["scheduled", "finished", "postponed", "cancelled"], "Alege starea meciului"),
+  status: z.enum(["scheduled", "live", "finished", "postponed", "cancelled"], "Alege starea meciului"),
   home_score: score,
   away_score: score,
   home_penalties: score,
@@ -70,8 +70,15 @@ async function checkMatch(
   }
 
   const values = { ...input, competition_id: competitionId };
+  if (input.status === "live") {
+    // Scorul live (0–0 dacă lipsește); penalty-urile se trec doar la final.
+    values.home_score ??= 0;
+    values.away_score ??= 0;
+    values.home_penalties = values.away_penalties = null;
+    return { values };
+  }
   if (input.status !== "finished") {
-    // Scorul există doar pentru meciurile terminate.
+    // Scorul există doar pentru meciurile începute.
     values.home_score = values.away_score = values.home_penalties = values.away_penalties = null;
     return { values };
   }

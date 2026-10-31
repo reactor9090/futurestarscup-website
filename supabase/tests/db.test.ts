@@ -92,6 +92,16 @@ describe("clasament calculat din meciuri", () => {
     ]);
   });
 
+  it("un meci în desfășurare (live) nu intră în clasament", async () => {
+    const pair = `home_team_id = (select id from teams where name = 'Viitorul Chișinău')
+        and away_team_id = (select id from teams where name = 'Sporting Bălți')`;
+    await db.exec(`update matches set status = 'live', home_score = 0, away_score = 5 where ${pair}`);
+    const table = await u12Standings();
+    expect(table.find((r) => r.team_name === "Sporting Bălți")!.played).toBe(1);
+    expect(table.find((r) => r.team_name === "Viitorul Chișinău")!.played).toBe(1);
+    await db.exec(`update matches set status = 'finished', home_score = 2, away_score = 1 where ${pair}`);
+  });
+
   it("corectarea unui scor recalculează automat clasamentul", async () => {
     await db.exec(`
       update matches set home_score = 0, away_score = 1

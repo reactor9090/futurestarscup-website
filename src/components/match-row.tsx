@@ -52,7 +52,15 @@ export function MatchRow({
           <span className="truncate">{m.home.name}</span>
           <TeamBadge url={m.home.club?.logo_url ?? null} name={m.home.name} size={30} tone="dark" />
         </Link>
-        {finished ? (
+        {m.status === "live" ? (
+          <span className="relative min-w-14 rounded-lg bg-red-600 px-3 py-1.5 text-center font-bold tabular-nums text-white">
+            {m.home_score} – {m.away_score}
+            <span className="absolute -top-2 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-white px-1.5 text-[9px] font-extrabold text-red-600">
+              <span className="size-1.5 animate-pulse rounded-full bg-red-600" aria-hidden />
+              LIVE
+            </span>
+          </span>
+        ) : finished ? (
           <span className="min-w-14 rounded-lg bg-white/10 px-3 py-1.5 text-center font-bold tabular-nums text-white">
             {m.home_score} – {m.away_score}
           </span>

@@ -14,6 +14,7 @@ export function CompetitionPicker({
   params = {},
   anchor,
   className,
+  tone,
 }: {
   basePath: string;
   competitions: PublicCompetition[];
@@ -21,12 +22,14 @@ export function CompetitionPicker({
   params?: Record<string, string>;
   anchor?: string;
   className?: string;
+  tone?: "light" | "dark";
 }) {
   if (competitions.length < 2) return null;
   return (
     <Segmented
       label="Categorie"
       className={className}
+      tone={tone}
       options={competitions.map((c) => ({
         href: `${basePath}?${new URLSearchParams({ ...params, competitie: c.id })}${anchor ? `#${anchor}` : ""}`,
         label: competitionLabel(c),

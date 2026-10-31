@@ -4,10 +4,10 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { ActionForm, SubmitButton } from "@/components/admin/action-form";
 import { Card, Field, inputClass } from "@/components/admin/fields";
-import { formatKickoff } from "@/lib/datetime";
+import { formatKickoff, isPast } from "@/lib/datetime";
 import { createSessionClient } from "@/lib/supabase/server";
 import { statusLabel, type MatchData } from "../match-fields";
-import { addEvent, deleteEvent, saveAppearances } from "./actions";
+import { addEvent, deleteEvent, finishMatch, saveAppearances, startMatch } from "./actions";
 
 export const metadata: Metadata = { title: "Rezultat meci", robots: { index: false } };
 
@@ -77,6 +77,10 @@ export default async function MatchResultPage({ params }: PageProps<"/admin/meci
   const events = [...match.match_events].sort((a, b) => (a.minute ?? 999) - (b.minute ?? 999));
   const played = new Set(match.match_appearances.map((a) => a.player_id));
   const finished = match.status === "finished";
+  const live = match.status === "live";
+  const canStart = match.status === "scheduled" || match.status === "postponed";
+  // Ora a trecut, dar meciul n-a fost pornit: îi amintim adminului.
+  const late = canStart && isPast(match.kickoff_at);
 
   // Golurile din evenimente (autogolul contează adversarului), comparate cu scorul final.
   const goalsFor = (teamId: string) =>
@@ -108,25 +112,60 @@ export default async function MatchResultPage({ params }: PageProps<"/admin/meci
           ← Meciuri
         </Link>
         <h1 className="mt-2 font-display text-3xl font-bold uppercase leading-none tracking-wide">
-          {match.home.name} {finished ? `${match.home_score} – ${match.away_score}` : "vs"} {match.away.name}
+          {match.home.name} {finished || live ? `${match.home_score} – ${match.away_score}` : "vs"} {match.away.name}
         </h1>
         <p className="mt-1 text-muted">
           {[match.competition?.name, match.round_label ?? (match.round ? `Etapa ${match.round}` : null), formatKickoff(match.kickoff_at)]
             .filter(Boolean)
             .join(" · ")}{" "}
-          · {statusLabel[match.status]}. Scorul se schimbă din lista de meciuri.
+          · {statusLabel[match.status]}
         </p>
       </div>
 
-      {!finished && (
-        <p className="rounded-md bg-gold-100 px-3 py-2 text-sm">
-          Meciul nu e marcat „Terminat”, deci evenimentele nu intră încă în statistici.
-        </p>
+      {(canStart || live) && (
+        <section
+          className={`flex flex-wrap items-center justify-between gap-4 rounded-xl p-5 ${
+            live ? "bg-pitch-950 text-white" : "border border-line bg-surface"
+          }`}
+        >
+          {live ? (
+            <div>
+              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-400">
+                <span className="size-2 animate-pulse rounded-full bg-red-500" aria-hidden /> Live
+              </p>
+              <p className="mt-1 font-display text-4xl font-bold tabular-nums">
+                {match.home_score} – {match.away_score}
+              </p>
+              <p className="mt-1 max-w-md text-sm text-white/70">
+                Fiecare gol adăugat mai jos crește scorul de pe site. Clasamentul și golgheterii se actualizează când termini
+                meciul.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p className="font-semibold">{late ? "Meciul trebuia să înceapă. L-ai pornit?" : "Meciul n-a început încă."}</p>
+              <p className="mt-0.5 max-w-md text-sm text-muted">
+                Când pornești meciul, pe site apare „Live” cu scorul, iar golurile pe care le adaugi îl actualizează.
+              </p>
+            </div>
+          )}
+          <ActionForm action={live ? finishMatch : startMatch}>
+            <input type="hidden" name="match_id" value={match.id} />
+            <SubmitButton
+              variant={live ? "secondary" : "primary"}
+              confirm={live ? `Termini meciul cu scorul ${match.home_score} – ${match.away_score}?` : undefined}
+            >
+              {live ? "■ Termină meciul" : "▶ Începe meciul"}
+            </SubmitButton>
+          </ActionForm>
+        </section>
       )}
+
       {mismatch && (
         <p className="rounded-md bg-gold-100 px-3 py-2 text-sm">
-          Golurile introduse ({homeGoals} – {awayGoals}) nu coincid cu scorul final ({match.home_score} – {match.away_score}).
-          E în regulă dacă nu ai toți marcatorii; clasamentul folosește scorul.
+          <strong>Atenție, nu e o eroare:</strong> scorul final e {match.home_score} – {match.away_score}, dar golurile adăugate mai
+          jos dau doar {homeGoals} – {awayGoals}. Clasamentul folosește scorul final, deci e corect. Dacă știi cine a marcat,
+          adaugă golurile care lipsesc ca să apară și la golgheteri.
         </p>
       )}
 

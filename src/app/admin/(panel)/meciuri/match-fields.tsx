@@ -21,7 +21,7 @@ export type MatchData = {
   away_team_id: string;
   kickoff_at: string | null;
   venue: string | null;
-  status: "scheduled" | "finished" | "postponed" | "cancelled";
+  status: "scheduled" | "live" | "finished" | "postponed" | "cancelled";
   home_score: number | null;
   away_score: number | null;
   home_penalties: number | null;
@@ -31,6 +31,7 @@ export type MatchData = {
 
 export const statusLabel: Record<MatchData["status"], string> = {
   scheduled: "Programat",
+  live: "În desfășurare (live)",
   finished: "Terminat",
   postponed: "Amânat",
   cancelled: "Anulat",
@@ -136,7 +137,7 @@ export function MatchFields({
         <input name="notes" maxLength={500} defaultValue={match?.notes ?? ""} className={inputClass} />
       </Field>
       <p className="text-xs text-muted">
-        Scorul se salvează doar dacă starea e „Terminat”. Loviturile de departajare se completează doar la play-off, când
+        Scorul se salvează doar dacă starea e „În desfășurare” (scor live) sau „Terminat”. Loviturile de departajare se completează doar la play-off, când
         scorul e egal.
       </p>
     </div>

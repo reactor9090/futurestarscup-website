@@ -5,7 +5,7 @@ import { slugify } from "@/lib/slug";
 type RoundMatch = {
   round: number | null;
   round_label: string | null;
-  status: "scheduled" | "finished" | "postponed" | "cancelled";
+  status: "scheduled" | "live" | "finished" | "postponed" | "cancelled";
   stage: { name: string; sort_order: number } | null;
 };
 
@@ -34,7 +34,9 @@ export function groupRounds<M extends RoundMatch>(matches: M[]): Round<M>[] {
     .map(({ key, title, stageName, matches }) => ({ key, title, stageName, matches }));
 }
 
-/** Etapa curentă: prima cu meciuri încă de jucat, altfel ultima. */
+/** Etapa curentă: prima cu meciuri în desfășurare sau încă de jucat, altfel ultima. */
 export function currentRound<M extends RoundMatch>(rounds: Round<M>[]): Round<M> | null {
-  return rounds.find((r) => r.matches.some((m) => m.status === "scheduled")) ?? rounds.at(-1) ?? null;
+  return (
+    rounds.find((r) => r.matches.some((m) => m.status === "live" || m.status === "scheduled")) ?? rounds.at(-1) ?? null
+  );
 }

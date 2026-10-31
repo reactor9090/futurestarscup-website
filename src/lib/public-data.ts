@@ -120,7 +120,7 @@ export type PublicMatch = {
   round_label: string | null;
   kickoff_at: string | null;
   venue: string | null;
-  status: "scheduled" | "finished" | "postponed" | "cancelled";
+  status: "scheduled" | "live" | "finished" | "postponed" | "cancelled";
   home_score: number | null;
   away_score: number | null;
   home_penalties: number | null;
@@ -352,13 +352,16 @@ export async function getTeamProfile(teamId: string): Promise<TeamProfile | null
 
 /* ------------------------------ Rezultate recente ------------------------------ */
 
-export type RecentResult = PublicMatch & { competition: { id: string; name: string } };
+export type RecentResult = PublicMatch & {
+  competition: { id: string; name: string; season: { name: string } | null; category: { name: string } | null };
+};
 
-/** Ultimele meciuri terminate din toate competițiile publicate (cel mai recent primul). */
-export async function getRecentResults(limit: number): Promise<RecentResult[]> {
+/** Ultimele meciuri terminate (cel mai recent primul) din competițiile date, publicate. */
+export async function getRecentResults(limit: number, competitionIds: string[]): Promise<RecentResult[]> {
   "use cache";
   cacheLife("hours");
   cacheTag("catalog", "teams", "matches");
+  if (competitionIds.length === 0) return [];
 
   const team = "id, name, club:clubs(logo_url)";
   const { data, error } = await createPublicClient()
@@ -367,10 +370,11 @@ export async function getRecentResults(limit: number): Promise<RecentResult[]> {
       `id, round, round_label, kickoff_at, venue, status, home_score, away_score, home_penalties, away_penalties,
        stage:stages(name, sort_order), group:stage_groups(name),
        home:teams!matches_home_team_id_fkey(${team}), away:teams!matches_away_team_id_fkey(${team}),
-       competition:competitions!inner(id, name, is_published)`,
+       competition:competitions!inner(id, name, is_published, season:seasons(name), category:categories(name))`,
     )
     .eq("status", "finished")
     .eq("competition.is_published", true)
+    .in("competition_id", competitionIds)
     .order("kickoff_at", { ascending: false, nullsFirst: false })
     .limit(limit)
     .overrideTypes<RecentResult[]>();

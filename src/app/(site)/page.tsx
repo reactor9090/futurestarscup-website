@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Announcements, HomeSponsors } from "@/components/home-content";
 import { DefaultHero, HomeHero } from "@/components/home-hero";
-import { HomeCompetitionSections, RecentResults } from "@/components/home-sections";
+import { HomeResults } from "@/components/home-results";
+import { HomeCompetitionSections } from "@/components/home-sections";
 import { EmptyState } from "@/components/ui";
 import { getCompetitions, pickCompetition } from "@/lib/public-data";
 
@@ -20,12 +21,12 @@ export default function HomePage({ searchParams }: PageProps<"/">) {
         <HomeHero />
       </Suspense>
 
-      <div className="mx-auto max-w-7xl space-y-20 px-4 py-14 sm:px-6 sm:py-20">
-        <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-forest/5" />}>
-          <CompetitionSections searchParams={searchParams} />
-        </Suspense>
+      <Suspense fallback={<div className="h-[36rem] animate-pulse bg-forest" />}>
+        <CompetitionSections searchParams={searchParams} />
+      </Suspense>
+      <div className="mx-auto max-w-7xl px-4 pt-20 sm:px-6">
         <Suspense>
-          <RecentResults />
+          <HomeResults searchParams={searchParams} />
         </Suspense>
       </div>
 
@@ -63,6 +64,12 @@ async function CompetitionSections({ searchParams }: { searchParams: PageProps<"
   const { competitie } = await searchParams;
   const competitions = await getCompetitions();
   const selected = pickCompetition(competitions, competitie);
-  if (!selected) return <EmptyState>Nicio competiție publicată încă.</EmptyState>;
+  if (!selected) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 pt-14 sm:px-6">
+        <EmptyState>Nicio competiție publicată încă.</EmptyState>
+      </div>
+    );
+  }
   return <HomeCompetitionSections competition={selected} competitions={competitions} />;
 }

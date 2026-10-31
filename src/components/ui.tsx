@@ -52,21 +52,34 @@ export function Segmented({
   label,
   options,
   className = "",
+  tone = "light",
 }: {
   label: string;
   options: { href: string; label: string; active: boolean }[];
   className?: string;
+  /** `dark` pe fundal verde închis: pastila activă devine lime. */
+  tone?: "light" | "dark";
 }) {
+  const dark = tone === "dark";
   return (
-    <nav className={`flex max-w-full flex-wrap gap-1 rounded-2xl bg-forest/5 p-1 ${className}`} aria-label={label}>
+    <nav
+      className={`flex max-w-full flex-wrap gap-1 rounded-full p-1 ${dark ? "border border-white/10 bg-white/5" : "bg-forest/5"} ${className}`}
+      aria-label={label}
+    >
       {options.map((o) => (
         <Link
           key={o.href}
           href={o.href}
           scroll={false}
           aria-current={o.active ? "page" : undefined}
-          className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
-            o.active ? "bg-forest text-white" : "text-forest/55 hover:text-forest"
+          className={`rounded-full px-4 py-2 text-xs font-bold transition ${
+            o.active
+              ? dark
+                ? "bg-lime text-forest"
+                : "bg-forest text-white"
+              : dark
+                ? "text-white/60 hover:text-white"
+                : "text-forest/55 hover:text-forest"
           }`}
         >
           {o.label}
