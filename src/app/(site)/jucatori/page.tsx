@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { TeamBadge } from "@/components/club-logo";
 import { CompetitionPicker, EmptyState } from "@/components/competition-picker";
 import { FilterBar } from "@/components/filter-bar";
+import { Icon, icons } from "@/components/icons";
 import { PageHeader } from "@/components/page-header";
 import { PlayerAvatar } from "@/components/player-avatar";
-import { Stat } from "@/components/ui";
+import { PlaceBadge, ViewToggle } from "@/components/view-toggle";
 import { positionLabels } from "@/lib/labels";
 import { getCompetitions, getPlayerStats, pickCompetition, type PlayerCardRow } from "@/lib/public-data";
 import { normalize } from "@/lib/search";
@@ -29,12 +31,13 @@ export default function JucatoriPage({ searchParams }: PageProps<"/jucatori">) {
 const byName = (a: PlayerCardRow, b: PlayerCardRow) =>
   a.last_name.localeCompare(b.last_name, "ro") || a.first_name.localeCompare(b.first_name, "ro");
 
+// Fiecare sortare are cifra ei, afișată mare pe card (la „Nume”, golurile).
 const sorts = {
-  goluri: { label: "Cele mai multe goluri", compare: (a: PlayerCardRow, b: PlayerCardRow) => b.goals - a.goals || b.assists - a.assists },
-  pase: { label: "Cele mai multe pase", compare: (a: PlayerCardRow, b: PlayerCardRow) => b.assists - a.assists || b.goals - a.goals },
-  meciuri: { label: "Cele mai multe meciuri", compare: (a: PlayerCardRow, b: PlayerCardRow) => b.matches_played - a.matches_played },
-  nume: { label: "Nume", compare: () => 0 },
-};
+  goluri: { label: "Cele mai multe goluri", value: (p: PlayerCardRow) => p.goals, unit: ["gol", "goluri"], tie: (p: PlayerCardRow) => p.assists },
+  pase: { label: "Cele mai multe pase", value: (p: PlayerCardRow) => p.assists, unit: ["pasă", "pase"], tie: (p: PlayerCardRow) => p.goals },
+  meciuri: { label: "Cele mai multe meciuri", value: (p: PlayerCardRow) => p.matches_played, unit: ["meci", "meciuri"], tie: (p: PlayerCardRow) => p.goals },
+  nume: { label: "Nume", value: (p: PlayerCardRow) => p.goals, unit: ["gol", "goluri"], tie: () => 0 },
+} as const;
 
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)?.trim() ?? "";
 
@@ -46,7 +49,9 @@ async function Players({ searchParams }: { searchParams: PageProps<"/jucatori">[
 
   const search = first(params.q);
   const team = first(params.echipa);
-  const sort = first(params.sort) in sorts ? (first(params.sort) as keyof typeof sorts) : "goluri";
+  const sortKey = first(params.sort) in sorts ? (first(params.sort) as keyof typeof sorts) : "goluri";
+  const sort = sorts[sortKey];
+  const list = first(params.vedere) === "lista";
   const needle = normalize(search);
 
   const all = await getPlayerStats(selected.id);
@@ -54,72 +59,172 @@ async function Players({ searchParams }: { searchParams: PageProps<"/jucatori">[
   const players = all
     .filter((p) => !team || p.team_id === team)
     .filter((p) => !needle || normalize(`${p.first_name} ${p.last_name} ${p.team_name}`).includes(needle))
-    .sort((a, b) => sorts[sort].compare(a, b) || byName(a, b));
+    .sort((a, b) => (sortKey === "nume" ? 0 : sort.value(b) - sort.value(a) || sort.tie(b) - sort.tie(a)) || byName(a, b));
+  // Locul în topul ales: cei cu aceeași cifră îl împart; fără loc la „Nume” sau la 0.
+  const placeOf = (p: PlayerCardRow) =>
+    sortKey === "nume" || sort.value(p) === 0 ? null : players.findIndex((x) => sort.value(x) === sort.value(p)) + 1;
+
+  const viewHref = (view: "grila" | "lista") =>
+    `/jucatori?${new URLSearchParams({ competitie: selected.id, ...(search && { q: search }), ...(team && { echipa: team }), sort: sortKey, vedere: view })}`;
 
   return (
     <>
-      <CompetitionPicker basePath="/jucatori" competitions={competitions} selectedId={selected.id} />
-      <FilterBar
-        action="/jucatori"
-        hidden={{ competitie: selected.id }}
-        search={{ value: search, placeholder: "Caută jucător după nume…" }}
-        selects={[
-          { name: "echipa", label: "Echipa", value: team, options: [["", "Toate echipele"], ...teams] },
-          { name: "sort", label: "Sortează", value: sort, options: Object.entries(sorts).map(([v, s]) => [v, s.label]) },
-        ]}
-      />
+      <div className="flex flex-wrap items-center gap-3">
+        <CompetitionPicker basePath="/jucatori" competitions={competitions} selectedId={selected.id} />
+        <span className="hidden h-8 w-px bg-line lg:block" aria-hidden />
+        <FilterBar
+          action="/jucatori"
+          hidden={{ competitie: selected.id, ...(list && { vedere: "lista" }) }}
+          search={{ value: search, placeholder: "Caută jucător după nume…" }}
+          selects={[
+            { name: "echipa", label: "Echipa", value: team, options: [["", "Toate echipele"], ...teams] },
+            { name: "sort", label: "Sortează", value: sortKey, options: Object.entries(sorts).map(([v, s]) => [v, s.label]) },
+          ]}
+        />
+        <ViewToggle list={list} href={viewHref} />
+      </div>
 
       {all.length === 0 ? (
         <EmptyState>Jucătorii vor apărea după înscrierea loturilor.</EmptyState>
       ) : players.length === 0 ? (
         <EmptyState>Niciun jucător găsit.</EmptyState>
+      ) : list ? (
+        <ul className="space-y-2">
+          {players.map((p) => (
+            <PlayerRow key={p.player_id + p.team_id} player={p} place={placeOf(p)} />
+          ))}
+        </ul>
       ) : (
         <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {players.map((p) => (
-            <li key={p.player_id + p.team_id}>
-              <PlayerCard player={p} />
-            </li>
-          ))}
+          {players.map((p) => {
+            const value = sort.value(p);
+            return (
+              <li key={p.player_id + p.team_id}>
+                <PlayerCard player={p} place={placeOf(p)} value={value} unit={sort.unit[value === 1 ? 0 : 1]} />
+              </li>
+            );
+          })}
         </ul>
       )}
     </>
   );
 }
 
-function PlayerCard({ player: p }: { player: PlayerCardRow }) {
+const statsOf = (p: PlayerCardRow) =>
+  [
+    ["Meciuri", p.matches_played],
+    ["Goluri", p.goals],
+    ["Pase decisive", p.assists],
+    ["Cartonașe", p.yellow_cards + p.red_cards],
+  ] as const;
+
+function PlayerCard({ player: p, place, value, unit }: { player: PlayerCardRow; place: number | null; value: number; unit: string }) {
   return (
-    <div className="flex h-full flex-col items-center rounded-3xl border border-line bg-surface p-5 text-center">
-      <PlayerAvatar player={p} size={96} />
-      <h2 className="mt-4 font-display text-2xl font-extrabold leading-tight tracking-tight text-forest">
-        {p.first_name} {p.last_name}
-      </h2>
-      <Link href={`/echipe/${p.team_id}`} className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-pitch-700">
-        <TeamBadge url={p.logo_url} name={p.team_name} size={18} />
-        {p.team_name}
-      </Link>
-      <dl className="mt-4 grid w-full grid-cols-3 gap-2 rounded-2xl bg-paper p-3 text-forest">
-        <Stat label="Meciuri" value={p.matches_played} />
-        <Stat label="Goluri" value={p.goals} />
-        <Stat label="Pase" value={p.assists} />
-      </dl>
-      <dl className="mt-3 flex w-full justify-between gap-2 text-xs">
-        <div className="flex gap-1">
-          <dt className="text-muted">Anul nașterii:</dt>
-          <dd className="font-semibold text-forest">{p.birth_year ?? "—"}</dd>
-        </div>
-        {p.position && (
-          <div className="flex gap-1">
-            <dt className="text-muted">Post:</dt>
-            <dd className="font-semibold text-forest">{positionLabels[p.position]}</dd>
-          </div>
+    <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-line bg-surface transition hover:-translate-y-0.5 hover:shadow-md">
+      {/* Banda de sus: locul, poza (cu acord) sau numărul, cifra sortării și echipa. */}
+      <div className="relative h-36 overflow-hidden bg-forest bg-[radial-gradient(ellipse_at_30%_0%,color-mix(in_oklab,var(--color-lime)_22%,transparent),transparent_65%)]">
+        {p.photo_url ? (
+          <Image src={p.photo_url} alt="" fill sizes="(min-width:1280px) 300px, 50vw" className="object-cover object-top" />
+        ) : (
+          <span className="absolute inset-0 grid place-items-center">
+            <PlayerAvatar player={p} size={88} tone="dark" />
+          </span>
         )}
-      </dl>
+        <span className="absolute inset-0 bg-gradient-to-t from-forest/85 via-transparent to-transparent" aria-hidden />
+        <span className="absolute left-3 top-3">
+          <PlaceBadge position={place} size="sm" />
+        </span>
+        <span className="absolute right-4 top-3 text-right">
+          <span className="block font-display text-5xl font-extrabold tabular-nums leading-none text-lime">{value}</span>
+          <span className="block text-[9px] font-bold uppercase tracking-wider text-white/70">{unit}</span>
+        </span>
+        <Link
+          href={`/echipe/${p.team_id}`}
+          className="absolute bottom-2.5 left-3 flex max-w-[85%] items-center gap-1.5 text-xs font-bold text-white hover:text-lime"
+        >
+          <TeamBadge url={p.logo_url} name={p.team_name} size={22} tone="dark" />
+          <span className="truncate">{p.team_name}</span>
+        </Link>
+      </div>
+
+      <div className="flex flex-1 flex-col p-4">
+        <h2 className="font-display text-2xl font-extrabold leading-tight tracking-tight text-forest">
+          {p.first_name} {p.last_name}
+        </h2>
+        <p className="text-xs text-muted">{p.position ? positionLabels[p.position] : "Post nestabilit"}</p>
+
+        <dl className="mt-3 grid grid-cols-4 rounded-2xl bg-paper/70 py-2.5 text-center">
+          {statsOf(p).map(([label, v]) => (
+            <div key={label}>
+              <dd className="font-display text-xl font-extrabold tabular-nums leading-none text-forest">{v}</dd>
+              <dt className="mt-1 text-[8px] font-semibold uppercase leading-tight tracking-wider text-muted">{label}</dt>
+            </div>
+          ))}
+        </dl>
+
+        <dl className="mt-3 flex justify-between gap-2 text-xs">
+          <div className="flex gap-1">
+            <dt className="text-muted">Anul nașterii:</dt>
+            <dd className="font-bold text-forest">{p.birth_year ?? "—"}</dd>
+          </div>
+          {p.shirt_number !== null && (
+            <div className="flex gap-1">
+              <dt className="text-muted">Nr.:</dt>
+              <dd className="font-bold text-forest">{p.shirt_number}</dd>
+            </div>
+          )}
+        </dl>
+
+        <Link
+          href={`/jucatori/${p.player_id}`}
+          className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-lime px-4 py-3 text-sm font-bold text-forest transition hover:brightness-95"
+        >
+          <Icon d={icons.eye} className="size-4" />
+          Vezi jucătorul
+          <Icon d={icons.arrow} />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function PlayerRow({ player: p, place }: { player: PlayerCardRow; place: number | null }) {
+  return (
+    <li>
       <Link
         href={`/jucatori/${p.player_id}`}
-        className="mt-5 w-full rounded-xl bg-lime px-4 py-2.5 text-sm font-bold text-forest hover:brightness-95"
+        className="group grid grid-cols-[auto_1fr_auto] items-center gap-4 rounded-2xl border border-line bg-surface p-3 transition hover:border-forest/30 md:grid-cols-[auto_minmax(0,1.3fr)_minmax(0,1fr)_auto_auto] md:px-4"
       >
-        Vezi jucătorul
+        <span className="flex items-center gap-3">
+          <span className="w-9">
+            <PlaceBadge position={place} size="sm" />
+          </span>
+          <PlayerAvatar player={p} size={44} />
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate font-display text-xl font-extrabold tracking-tight text-forest group-hover:text-pitch-700">
+            {p.first_name} {p.last_name}
+          </span>
+          <span className="block text-xs text-muted">
+            {[p.position && positionLabels[p.position], p.birth_year && `n. ${p.birth_year}`].filter(Boolean).join(" · ") || "—"}
+          </span>
+        </span>
+        <span className="hidden min-w-0 items-center gap-2 text-sm font-semibold text-forest md:flex">
+          <TeamBadge url={p.logo_url} name={p.team_name} size={28} />
+          <span className="truncate">{p.team_name}</span>
+        </span>
+        <dl className="hidden grid-cols-4 gap-4 text-center md:grid">
+          {statsOf(p).map(([label, v]) => (
+            <div key={label}>
+              <dd className="font-display text-xl font-extrabold tabular-nums leading-none text-forest">{v}</dd>
+              <dt className="mt-1 text-[8px] font-semibold uppercase tracking-wider text-muted">{label}</dt>
+            </div>
+          ))}
+        </dl>
+        <span className="grid size-9 place-items-center rounded-full border border-line text-forest group-hover:border-forest">
+          <Icon d={icons.arrow} className="size-4" />
+        </span>
       </Link>
-    </div>
+    </li>
   );
 }

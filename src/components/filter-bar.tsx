@@ -1,8 +1,12 @@
-// Bara de căutare și filtre: un formular GET simplu, deci funcționează fără JavaScript
-// și rezultatul se poate trimite ca link.
+import Form from "next/form";
+import { AutoSubmitSelect } from "@/components/auto-submit-select";
+import { Icon, icons } from "@/components/icons";
+
+// Bara de căutare și filtre: un formular GET, deci funcționează și fără JavaScript și rezultatul se poate
+// trimite ca link. Cu JavaScript, listele se aplică imediat, iar pagina nu mai sare sus.
 
 const field =
-  "block w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-sm text-forest outline-none focus:border-forest focus:ring-2 focus:ring-lime/60";
+  "block w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-forest outline-none focus:border-forest focus:ring-2 focus:ring-lime/60";
 
 export function FilterBar({
   action,
@@ -12,32 +16,38 @@ export function FilterBar({
 }: {
   action: string;
   hidden: Record<string, string>;
-  search: { value: string; placeholder: string };
+  search?: { value: string; placeholder: string };
   selects?: { name: string; label: string; value: string; options: [string, string][] }[];
 }) {
   return (
-    <form action={action} className="flex flex-col gap-2 rounded-3xl border border-line bg-surface/60 p-2 sm:flex-row">
+    <Form action={action} scroll={false} replace className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
       {Object.entries(hidden).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
-      <input
-        type="search"
-        name="q"
-        defaultValue={search.value}
-        placeholder={search.placeholder}
-        aria-label={search.placeholder}
-        className={`${field} sm:flex-[2]`}
-      />
+      {search && (
+        <label className="relative min-w-0 sm:flex-[2]">
+          <Icon d={icons.search} className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted" />
+          <input
+            type="search"
+            name="q"
+            defaultValue={search.value}
+            placeholder={search.placeholder}
+            aria-label={search.placeholder}
+            className={`${field} pl-10`}
+          />
+        </label>
+      )}
       {selects.map((s) => (
-        <select key={s.name} name={s.name} defaultValue={s.value} aria-label={s.label} className={`${field} sm:flex-1`}>
+        <AutoSubmitSelect key={s.name} name={s.name} defaultValue={s.value} aria-label={s.label} className={`${field} sm:flex-1`}>
           {s.options.map(([value, label]) => (
             <option key={value} value={value}>
               {s.name === "sort" ? `Sortează: ${label}` : label}
             </option>
           ))}
-        </select>
+        </AutoSubmitSelect>
       ))}
-      <button className="rounded-xl bg-forest px-5 py-2.5 text-sm font-bold text-white hover:bg-forest-soft">Aplică</button>
-    </form>
+      {/* Enter în căutare trimite formularul; butonul e doar pentru cititoarele de ecran. */}
+      <button className="sr-only">Caută</button>
+    </Form>
   );
 }

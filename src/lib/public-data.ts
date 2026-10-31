@@ -234,6 +234,8 @@ export type PublicTeam = {
   roster_size: number;
   /** Locul în primul clasament în care apare echipa; null dacă nu e în niciun clasament. */
   position: number | null;
+  /** Grupa în care e calculat locul (la faza pe grupe); null la campionat. */
+  group: string | null;
 };
 
 type RawTeam = {
@@ -268,9 +270,11 @@ export async function getTeams(competitionId: string): Promise<PublicTeam[]> {
   if (failed) throw new Error(failed.message);
 
   const byTeam = new Map((stats.data ?? []).map((s) => [s.team_id, s]));
-  const positions = new Map<string, number>();
-  for (const row of standings.flatMap((s) => s.tables.flatMap((t) => t.rows))) {
-    if (!positions.has(row.team_id)) positions.set(row.team_id, row.position);
+  const positions = new Map<string, { position: number; group: string | null }>();
+  for (const table of standings.flatMap((s) => s.tables)) {
+    for (const row of table.rows) {
+      if (!positions.has(row.team_id)) positions.set(row.team_id, { position: row.position, group: table.groupName });
+    }
   }
   return (teams.data ?? [])
     .map((t) => {
@@ -280,7 +284,8 @@ export async function getTeams(competitionId: string): Promise<PublicTeam[]> {
       return {
         coach_name: t.club?.coach_name ?? null,
         roster_size: t.roster_entries[0]?.count ?? 0,
-        position: positions.get(t.id) ?? null,
+        position: positions.get(t.id)?.position ?? null,
+        group: positions.get(t.id)?.group ?? null,
         id: t.id,
         name: t.name,
         logo_url: t.club?.logo_url ?? null,
