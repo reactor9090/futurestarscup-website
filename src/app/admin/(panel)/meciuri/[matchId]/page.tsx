@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Fragment } from "react";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { ActionForm, SubmitButton } from "@/components/admin/action-form";
@@ -7,7 +8,7 @@ import { Card, Field, inputClass } from "@/components/admin/fields";
 import { formatKickoff, isPast } from "@/lib/datetime";
 import { createSessionClient } from "@/lib/supabase/server";
 import { statusLabel, type MatchData } from "../match-fields";
-import { addEvent, deleteEvent, finishMatch, saveAppearances, startMatch } from "./actions";
+import { addEvent, deleteEvent, finishMatch, saveAppearances, saveStats, startMatch } from "./actions";
 
 export const metadata: Metadata = { title: "Rezultat meci", robots: { index: false } };
 
@@ -37,7 +38,20 @@ type MatchPage = Pick<MatchData, "id" | "status" | "home_score" | "away_score" |
     assist: Player | null;
   }[];
   match_appearances: { player_id: string }[];
+  match_team_stats: Record<string, number | string | null>[];
 };
+
+const statFields = [
+  ["possession", "Posesie (%)"],
+  ["shots", "Șuturi"],
+  ["shots_on_target", "Șuturi pe poartă"],
+  ["corners", "Cornere"],
+  ["fouls", "Faulturi"],
+  ["offsides", "Ofsaiduri"],
+] as const;
+
+const statOf = (match: MatchPage, teamId: string, key: string) =>
+  match.match_team_stats.find((s) => s.team_id === teamId)?.[key] ?? "";
 
 const playerName = (p: Player | null) => (p ? `${p.first_name} ${p.last_name}` : "—");
 
@@ -64,7 +78,8 @@ export default async function MatchResultPage({ params }: PageProps<"/admin/meci
        match_events(id, type, team_id, minute,
          player:players!match_events_player_id_fkey(id, first_name, last_name),
          assist:players!match_events_assist_player_id_fkey(id, first_name, last_name)),
-       match_appearances(player_id)`,
+       match_appearances(player_id),
+       match_team_stats(team_id, shots, shots_on_target, corners, fouls, offsides, possession)`,
     )
     .eq("id", matchId)
     .maybeSingle()
@@ -222,6 +237,39 @@ export default async function MatchResultPage({ params }: PageProps<"/admin/meci
           <p className="mt-2 text-xs text-muted">
             La autogol alegi jucătorul care a greșit; golul se numără automat adversarului.
           </p>
+        </ActionForm>
+      </Card>
+
+      <Card
+        title="Statistici"
+        description="Opționale: pe pagina publică a meciului apar doar câmpurile completate. Posesia o introduci pentru gazde, oaspeții primesc restul până la 100."
+      >
+        <ActionForm action={saveStats} className="space-y-4">
+          <input type="hidden" name="match_id" value={match.id} />
+          <div className="grid max-w-xl grid-cols-[1fr_6rem_6rem] items-center gap-x-4 gap-y-2 text-sm">
+            <span />
+            <strong className="truncate">{match.home.name}</strong>
+            <strong className="truncate">{match.away.name}</strong>
+            {statFields.map(([key, label]) => (
+              <Fragment key={key}>
+                <span>{label}</span>
+                {teams.map((t, i) => (
+                  <input
+                    key={t.id}
+                    name={`${i === 0 ? "home" : "away"}_${key}`}
+                    type="number"
+                    min={0}
+                    max={key === "possession" ? 100 : 999}
+                    defaultValue={statOf(match, t.id, key)}
+                    disabled={key === "possession" && i === 1}
+                    placeholder={key === "possession" && i === 1 ? "auto" : undefined}
+                    className={inputClass}
+                  />
+                ))}
+              </Fragment>
+            ))}
+          </div>
+          <SubmitButton variant="secondary">Salvează statisticile</SubmitButton>
         </ActionForm>
       </Card>
 

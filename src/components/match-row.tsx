@@ -45,10 +45,11 @@ export function MatchRow({
   const extra = [m.group?.name, penalties].filter(Boolean).join(" · ");
 
   return (
-    <li className="rounded-xl border border-white/5 bg-forest-soft px-3 py-3 text-sm sm:px-4">
+    <li className="relative rounded-xl border border-white/5 bg-forest-soft px-3 py-3 text-sm sm:px-4">
+      <Link href={`/meciuri/${m.id}`} aria-label={`Pagina meciului ${m.home.name} – ${m.away.name}`} className="absolute inset-0 rounded-xl" />
       <div className="grid grid-cols-[3rem_1fr_auto_1fr] items-center gap-2 sm:grid-cols-[4.5rem_1fr_auto_1fr_4.5rem] sm:gap-3">
         <span className="text-xs font-bold tabular-nums text-lime">{kickoff}</span>
-        <Link href={`/echipe/${m.home.id}`} className="flex min-w-0 items-center justify-end gap-2.5 text-right font-semibold text-white hover:text-lime">
+        <Link href={`/echipe/${m.home.id}`} className="relative z-10 flex min-w-0 items-center justify-end gap-2.5 text-right font-semibold text-white hover:text-lime">
           <span className="truncate">{m.home.name}</span>
           <TeamBadge url={m.home.club?.logo_url ?? null} name={m.home.name} size={30} tone="dark" />
         </Link>
@@ -73,7 +74,7 @@ export function MatchRow({
             {status ?? "VS"}
           </span>
         )}
-        <Link href={`/echipe/${m.away.id}`} className="flex min-w-0 items-center gap-2.5 font-semibold text-white hover:text-lime">
+        <Link href={`/echipe/${m.away.id}`} className="relative z-10 flex min-w-0 items-center gap-2.5 font-semibold text-white hover:text-lime">
           <TeamBadge url={m.away.club?.logo_url ?? null} name={m.away.name} size={30} />
           <span className="truncate">{m.away.name}</span>
         </Link>

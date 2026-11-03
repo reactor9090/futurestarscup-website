@@ -201,3 +201,49 @@ export async function saveAppearances(_prev: FormState, formData: FormData): Pro
   refresh(`/admin/meciuri/${matchId.data}`, "matches");
   return { ok: `Prezențe salvate (${rows.length})` };
 }
+
+const statKeys = ["shots", "shots_on_target", "corners", "fouls", "offsides"] as const;
+const statNumber = optionalInt(0, 999, "Statisticile trebuie să fie numere între 0 și 999");
+const possessionNumber = optionalInt(0, 100, "Posesia trebuie să fie între 0 și 100");
+
+/** Salvează statisticile echipelor. Posesia se introduce pentru gazde; oaspeții primesc restul până la 100. */
+export async function saveStats(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { supabase } = await requireAdmin();
+  const matchId = idSchema.safeParse(formData.get("match_id"));
+  if (!matchId.success) return { error: "Meci invalid" };
+
+  const { data: match } = await supabase
+    .from("matches")
+    .select("home_team_id, away_team_id")
+    .eq("id", matchId.data)
+    .maybeSingle();
+  if (!match) return { error: "Meciul nu mai există" };
+
+  const read = (field: string, schema: typeof statNumber) => schema.safeParse(formData.get(field) ?? "");
+  const rows = [];
+  for (const [side, team_id] of [["home", match.home_team_id], ["away", match.away_team_id]] as const) {
+    const row: Record<string, number | string | null> = { match_id: matchId.data, team_id };
+    for (const key of statKeys) {
+      const v = read(`${side}_${key}`, statNumber);
+      if (!v.success) return firstError(v.error);
+      row[key] = v.data;
+    }
+    rows.push(row);
+  }
+  const possession = read("home_possession", possessionNumber);
+  if (!possession.success) return firstError(possession.error);
+  rows[0].possession = possession.data;
+  rows[1].possession = possession.data === null ? null : 100 - possession.data;
+
+  for (const row of rows) {
+    if (row.shots !== null && row.shots_on_target !== null && Number(row.shots_on_target) > Number(row.shots)) {
+      return { error: "Șuturile pe poartă nu pot depăși totalul șuturilor" };
+    }
+  }
+
+  const { error } = await supabase.from("match_team_stats").upsert(rows, { onConflict: "match_id,team_id" });
+  if (error) return dbError(error, "");
+
+  refresh(`/admin/meciuri/${matchId.data}`, "matches");
+  return { ok: "Statistici salvate" };
+}

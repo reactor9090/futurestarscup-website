@@ -45,7 +45,8 @@ function ResultCard({ match: m }: { match: RecentResult }) {
   ] as const;
 
   return (
-    <li className="rounded-none border border-line bg-surface p-5 transition hover:border-forest/30 hover:shadow-sm">
+    <li className="relative rounded-none border border-line bg-surface p-5 transition hover:border-forest/30 hover:shadow-sm">
+      <Link href={`/meciuri/${m.id}`} aria-label={`Pagina meciului ${m.home.name} – ${m.away.name}`} className="absolute inset-0" />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-[11px] font-bold uppercase tracking-wider text-muted">
@@ -65,7 +66,7 @@ function ResultCard({ match: m }: { match: RecentResult }) {
 
       <div className="mt-4 divide-y divide-line">
         {sides.map(({ key, team, score, pens }) => (
-          <Link key={key} href={`/echipe/${team.id}`} className="group flex items-center gap-4 py-2.5 first:pt-0 last:pb-0">
+          <Link key={key} href={`/echipe/${team.id}`} className="group relative z-10 flex items-center gap-4 py-2.5 first:pt-0 last:pb-0">
             <TeamBadge url={team.club?.logo_url ?? null} name={team.name} size={44} />
             <span className={`min-w-0 flex-1 truncate text-forest group-hover:text-pitch-700 ${won === key ? "font-bold" : "font-medium"}`}>
               {team.name}

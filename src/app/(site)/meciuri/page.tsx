@@ -183,7 +183,7 @@ function Team({ team, align }: { team: PublicMatch["home"]; align: "start" | "en
   const reverse =
     align === "end" ? "flex-row-reverse text-right" : align === "end-mobile" ? "flex-row-reverse text-right sm:flex-row sm:text-left" : "";
   return (
-    <Link href={`/echipe/${team.id}`} className={`group flex min-w-0 items-center gap-3 ${reverse}`}>
+    <Link href={`/echipe/${team.id}`} className={`group relative z-10 flex min-w-0 items-center gap-3 ${reverse}`}>
       <TeamBadge url={team.club?.logo_url ?? null} name={team.name} size={40} />
       <span className="line-clamp-2 text-sm font-bold leading-tight text-forest group-hover:text-pitch-700 sm:text-base">
         {team.name}
@@ -200,7 +200,8 @@ function FixtureRow({ match: m }: { match: PublicMatch }) {
     finished && m.home_penalties !== null && m.away_penalties !== null ? `${m.home_penalties}–${m.away_penalties} pen.` : null;
 
   return (
-    <li className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-3 gap-y-3 rounded-2xl border border-line bg-paper/40 p-3 transition hover:border-forest/25 sm:grid-cols-[5.5rem_1fr_6rem_1fr_minmax(0,13rem)] sm:gap-x-4 sm:px-4">
+    <li className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-x-3 gap-y-3 rounded-2xl border border-line bg-paper/40 p-3 transition hover:border-forest/25 sm:grid-cols-[5.5rem_1fr_6rem_1fr_minmax(0,13rem)] sm:gap-x-4 sm:px-4">
+      <Link href={`/meciuri/${m.id}`} aria-label={`Pagina meciului ${m.home.name} – ${m.away.name}`} className="absolute inset-0 rounded-2xl" />
       {/* Ora; pe telefon ocupă un rând întreg, împreună cu terenul. */}
       <div className="col-span-3 flex items-center justify-between gap-2 sm:col-span-1">
         <span className="rounded-xl bg-lime/40 px-3 py-2 text-center font-display text-lg font-extrabold tabular-nums text-forest">
@@ -290,7 +291,8 @@ function RecentResults({
 
       <ul className="grid gap-4 md:grid-cols-2">
         {matches.map((m) => (
-          <li key={m.id} className="rounded-none border border-line bg-surface p-5">
+          <li key={m.id} className="relative rounded-none border border-line bg-surface p-5">
+            <Link href={`/meciuri/${m.id}`} aria-label={`Pagina meciului ${m.home.name} – ${m.away.name}`} className="absolute inset-0" />
             <div className="flex items-center justify-between gap-3">
               <p className="truncate text-[11px] font-bold uppercase tracking-wider text-muted">
                 <span className="text-forest">{competitionLabel(competition)}</span>

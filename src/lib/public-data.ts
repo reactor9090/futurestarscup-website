@@ -659,3 +659,142 @@ export async function getOpenCompetitions(): Promise<OpenCompetition[]> {
     )
     .map(({ id, name, min_birth_year, max_birth_year }) => ({ id, name, min_birth_year, max_birth_year }));
 }
+
+/* ------------------------------ Pagina unui meci ------------------------------ */
+
+type NamedPlayer = { id: string; first_name: string; last_name: string };
+export type MatchEvent = {
+  id: string;
+  type: "goal" | "own_goal" | "yellow_card" | "red_card";
+  team_id: string;
+  minute: number | null;
+  player: NamedPlayer | null;
+  assist: NamedPlayer | null;
+};
+
+export type MatchTeamStats = {
+  team_id: string;
+  shots: number | null;
+  shots_on_target: number | null;
+  corners: number | null;
+  fouls: number | null;
+  offsides: number | null;
+  possession: number | null;
+};
+
+export type LineupPlayer = {
+  player_id: string;
+  first_name: string;
+  last_name: string;
+  position: PlayerStatRow["position"];
+  shirt_number: number | null;
+  goals: number;
+  own_goals: number;
+  assists: number;
+  yellow_cards: number;
+  red_cards: number;
+};
+
+export type MatchDetail = Omit<PublicMatch, "round" | "round_label"> & {
+  round: number | null;
+  round_label: string | null;
+  competition: {
+    id: string;
+    name: string;
+    season: { name: string; is_current: boolean } | null;
+    category: { name: string } | null;
+  };
+  stage_id: string;
+  group_id: string | null;
+  events: MatchEvent[];
+  stats: MatchTeamStats[];
+  /** Cine a jucat: cei bifați de organizatori, plus oricine apare într-un eveniment al meciului. */
+  lineups: { home: LineupPlayer[]; away: LineupPlayer[] };
+};
+
+type RawMatchDetail = Omit<MatchDetail, "events" | "stats" | "lineups"> & {
+  home: PublicMatch["home"];
+  away: PublicMatch["away"];
+  match_events: MatchEvent[];
+  match_team_stats: MatchTeamStats[];
+  match_appearances: { player_id: string; team_id: string }[];
+};
+
+type RosterRow = {
+  team_id: string;
+  shirt_number: number | null;
+  player: (NamedPlayer & { position: LineupPlayer["position"] }) | null;
+};
+
+export async function getMatchDetail(matchId: string): Promise<MatchDetail | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("catalog", "teams", "matches");
+
+  const supabase = createPublicClient();
+  const team = "id, name, club:clubs(logo_url)";
+  const player = "id, first_name, last_name";
+  const { data, error } = await supabase
+    .from("matches")
+    .select(
+      `id, round, round_label, kickoff_at, venue, status, home_score, away_score, home_penalties, away_penalties,
+       stage_id, group_id,
+       stage:stages(name, sort_order), group:stage_groups(name),
+       competition:competitions!inner(id, name, is_published, season:seasons(name, is_current), category:categories(name)),
+       home:teams!matches_home_team_id_fkey(${team}), away:teams!matches_away_team_id_fkey(${team}),
+       match_events(id, type, team_id, minute,
+         player:players!match_events_player_id_fkey(${player}),
+         assist:players!match_events_assist_player_id_fkey(${player})),
+       match_team_stats(team_id, shots, shots_on_target, corners, fouls, offsides, possession),
+       match_appearances(player_id, team_id)`,
+    )
+    .eq("id", matchId)
+    .eq("competition.is_published", true)
+    .maybeSingle()
+    .overrideTypes<RawMatchDetail>();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const roster = await supabase
+    .from("roster_entries")
+    .select("team_id, shirt_number, player:players(id, first_name, last_name, position)")
+    .in("team_id", [data.home.id, data.away.id])
+    .overrideTypes<RosterRow[]>();
+  if (roster.error) throw new Error(roster.error.message);
+
+  const events = [...data.match_events].sort((a, b) => (a.minute ?? 999) - (b.minute ?? 999));
+  const lineup = (teamId: string): LineupPlayer[] => {
+    const involved = new Set([
+      ...data.match_appearances.filter((a) => a.team_id === teamId).map((a) => a.player_id),
+      ...events.filter((e) => e.team_id === teamId && e.player).map((e) => e.player!.id),
+      ...events.filter((e) => e.team_id === teamId && e.assist).map((e) => e.assist!.id),
+    ]);
+    return roster.data
+      .filter((r) => r.team_id === teamId && r.player && involved.has(r.player.id))
+      .map((r) => {
+        const p = r.player!;
+        const own = events.filter((e) => e.player?.id === p.id);
+        return {
+          player_id: p.id,
+          first_name: p.first_name,
+          last_name: p.last_name,
+          position: p.position,
+          shirt_number: r.shirt_number,
+          goals: own.filter((e) => e.type === "goal").length,
+          own_goals: own.filter((e) => e.type === "own_goal").length,
+          assists: events.filter((e) => e.assist?.id === p.id).length,
+          yellow_cards: own.filter((e) => e.type === "yellow_card").length,
+          red_cards: own.filter((e) => e.type === "red_card").length,
+        };
+      })
+      .sort(
+        (a, b) =>
+          (a.shirt_number ?? 1000) - (b.shirt_number ?? 1000) || a.last_name.localeCompare(b.last_name, "ro"),
+      );
+  };
+
+  // Rândurile brute (evenimente, prezențe) sunt înlocuite de `events` și `lineups`.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { match_events: _e, match_team_stats: stats, match_appearances: _a, ...match } = data;
+  return { ...match, events, stats, lineups: { home: lineup(data.home.id), away: lineup(data.away.id) } };
+}

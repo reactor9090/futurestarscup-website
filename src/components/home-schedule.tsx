@@ -64,13 +64,11 @@ function MatchCard({
   next,
   showDate,
   showVenue,
-  href,
 }: {
   match: PublicMatch;
   next: boolean;
   showDate: boolean;
   showVenue: boolean;
-  href: string;
 }) {
   const hasScore = m.status === "finished" || m.status === "live";
   const penalties =
@@ -115,8 +113,8 @@ function MatchCard({
 
       <TeamCell team={m.away} side="away" />
 
-      {/* Tot cardul duce la etapă; link-urile echipelor stau deasupra (z-10). */}
-      <Link href={href} aria-label="Vezi etapa în programul complet" className="absolute inset-0 rounded-2xl" />
+      {/* Tot cardul duce la pagina meciului; link-urile echipelor stau deasupra (z-10). */}
+      <Link href={`/meciuri/${m.id}`} aria-label={`Pagina meciului ${m.home.name} – ${m.away.name}`} className="absolute inset-0 rounded-2xl" />
     </li>
   );
 }
@@ -349,7 +347,6 @@ export function HomeSchedule({
                       next={m.id === nextId}
                       showDate={days.size > 1}
                       showVenue={venues.size > 1}
-                      href={fullHref}
                     />
                   ))}
                 </ul>

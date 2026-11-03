@@ -183,6 +183,21 @@ describe("securitate (RLS)", () => {
     });
   });
 
+  it("statistici de meci: public la citire, doar adminul scrie, validări", async () => {
+    await db.exec(`
+      insert into match_team_stats (match_id, team_id, shots, shots_on_target, possession)
+      select id, home_team_id, 10, 4, 60 from matches limit 1`);
+    await expect(
+      db.exec(`insert into match_team_stats (match_id, team_id, shots, shots_on_target)
+               select id, away_team_id, 2, 5 from matches limit 1`),
+    ).rejects.toThrow();
+    await as("anon", null, async () => {
+      expect((await one<{ n: number }>(`select count(*)::int n from match_team_stats`)).n).toBe(1);
+      await expect(db.exec(`update match_team_stats set shots = 99`)).resolves.not.toThrow();
+    });
+    expect((await one<{ shots: number }>(`select shots from match_team_stats`)).shots).toBe(10);
+  });
+
   it("adminul poate scrie", async () => {
     await as("authenticated", ADMIN_ID, async () => {
       await db.exec(`insert into categories (name, slug, sort_order) values ('U14', 'u14', 14)`);
