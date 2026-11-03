@@ -270,7 +270,7 @@ function Timeline({ m }: { m: MatchDetail }) {
               <span className="text-lg" aria-hidden>
                 {eventIcon[e.type]}
               </span>
-              <span className="text-xs font-bold tabular-nums text-muted">{e.minute !== null ? `${e.minute}'` : ""}</span>
+              <span className="mt-0.5 text-xs font-bold tabular-nums text-muted">{e.minute !== null ? `${e.minute}'` : "–"}</span>
             </span>
             {side === "away" ? text : <span />}
           </li>
@@ -451,32 +451,34 @@ function TeamForm({
 
 function OtherMatch({ match: o }: { match: PublicMatch }) {
   const hasScore = o.status === "finished" || o.status === "live";
+  const rows = [
+    { team: o.home, score: o.home_score },
+    { team: o.away, score: o.away_score },
+  ];
   return (
     <li>
       <Link
         href={`/meciuri/${o.id}`}
-        className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-2xl border border-line bg-paper/40 p-3 text-sm transition hover:border-forest/30"
+        className="block rounded-2xl border border-line bg-paper/40 p-3 text-sm transition hover:border-forest/30"
       >
-        <span className="flex min-w-0 items-center gap-2">
-          <TeamBadge url={o.home.club?.logo_url ?? null} name={o.home.name} size={26} />
-          <span className="truncate font-semibold text-forest">{o.home.name}</span>
-        </span>
-        <span
-          className={`rounded-lg px-2.5 py-1 text-center text-xs font-extrabold tabular-nums ${
-            o.status === "live" ? "bg-red-600 text-white" : hasScore ? "bg-forest text-white" : "bg-lime text-forest"
-          }`}
-        >
-          {hasScore ? `${o.home_score}–${o.away_score}` : o.kickoff_at ? timeFormat.format(new Date(o.kickoff_at)) : "VS"}
-        </span>
-        <span className="flex min-w-0 items-center justify-end gap-2">
-          <span className="truncate text-right font-semibold text-forest">{o.away.name}</span>
-          <TeamBadge url={o.away.club?.logo_url ?? null} name={o.away.name} size={26} />
-        </span>
-        {o.kickoff_at && (
-          <span className="col-span-3 -mt-1 text-center text-[10px] font-bold uppercase tracking-wider text-muted">
-            {shortDate.format(new Date(o.kickoff_at))}
-          </span>
-        )}
+        <div className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted">
+          <span>{o.kickoff_at ? `${shortDate.format(new Date(o.kickoff_at))}, ${timeFormat.format(new Date(o.kickoff_at))}` : "Data nestabilită"}</span>
+          {o.status === "live" && <span className="text-red-600">Live</span>}
+          {o.status === "finished" && <span>Final</span>}
+        </div>
+        <ul className="space-y-1.5">
+          {rows.map(({ team, score }) => (
+            <li key={team.id} className="flex items-center gap-2.5">
+              <TeamBadge url={team.club?.logo_url ?? null} name={team.name} size={24} />
+              <span className="min-w-0 flex-1 truncate font-semibold text-forest">{team.name}</span>
+              {hasScore && (
+                <span className={`font-display text-lg font-extrabold tabular-nums ${o.status === "live" ? "text-red-600" : "text-forest"}`}>
+                  {score}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
       </Link>
     </li>
   );

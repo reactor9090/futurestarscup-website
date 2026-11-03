@@ -16,8 +16,8 @@ export function Logo({
       <Image
         src="/logo.png"
         alt="Future Stars Cup"
-        width={Math.round(height * (1000 / 578))}
-        height={height}
+        width={1000}
+        height={578}
         priority
         className={tone === "light" ? "brightness-0 invert" : undefined}
         style={{ height, width: "auto" }}

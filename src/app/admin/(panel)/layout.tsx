@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Logo } from "@/components/logo";
 import { requireAdmin } from "@/lib/auth";
@@ -6,6 +7,8 @@ import { AdminNav, AdminNavLinks } from "./admin-nav";
 
 // Verificarea de admin citește cookie-uri, deci stă în spatele unui <Suspense>.
 async function AdminGate({ children }: { children: React.ReactNode }) {
+  // Sesiunea (și expirarea ei, care citește ora) există doar la cerere, niciodată în pagina pre-randată.
+  await connection();
   const { user } = await requireAdmin();
   return (
     <>
