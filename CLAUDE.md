@@ -75,7 +75,7 @@ The approved plan has 6 phases (feature list F1–F28). Phase 1 (foundation: sch
 
 ### Public design and Golazo-inspired features
 The plan is in `~/.claude/plans/uite-acum-as-kind-rivest.md`. The user compared the site with golazo.md, a competitor, and chose to keep our own light style rather than Golazo's dark theme, and to skip break rows between matches.
-- **Style:** the public site uses `forest`, `forest-soft`, `lime` and `paper` (in `globals.css`). The `(site)` layout sets the `bg-paper` background; admin keeps `pitch`/`gold`. Headings are large `font-display`, not uppercase.
+- **Style:** the public site uses `forest`, `forest-soft`, `lime` and `paper` (in `globals.css`). Since the real logo (`public/logo.png`, gold trophy + black text; original in `public/FutureStarsCupLogo(transparent).png`) the tokens are remapped: `forest` is warm near-black, `lime` is gold. The site header is white; `Logo` has `tone="dark"` for light backgrounds and a white (CSS-inverted) version for dark ones. The tab icon is `src/app/icon.png`. The `(site)` layout sets the `bg-paper` background; admin keeps `pitch`/`gold`. Headings are large `font-display`, not uppercase.
 - **Shared components:** `components/ui.tsx` (`SectionHeader`, `Segmented`, `Stat`, `EmptyState`, `PositionBadge`, `signed`), `match-row.tsx` (`MatchRow` inside a dark `MatchPanel`), `leader-card.tsx`, `filter-bar.tsx` (GET form), `player-avatar.tsx`, and `TeamBadge` with initials in `club-logo.tsx`. `CompetitionPicker` is a `Segmented` that keeps other params via `params`.
 - **Home:** a "Jucătorul etapei" carousel (`home-hero.tsx`, falls back to `DefaultHero`); the current round plus a top-scorer card; top-6 standings; top-5 scorers; recent results from all competitions.
 - **Pages:**

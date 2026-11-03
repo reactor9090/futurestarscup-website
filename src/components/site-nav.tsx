@@ -43,14 +43,14 @@ export function SiteNav() {
 
   return (
     <>
-      <nav className="hidden items-center gap-1 rounded-2xl bg-white/5 p-1 xl:flex" aria-label="Navigare principală">
+      <nav className="hidden items-center gap-1 rounded-2xl bg-forest/5 p-1 xl:flex" aria-label="Navigare principală">
         {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}
             aria-current={isActive(pathname, link.href) ? "page" : undefined}
             className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
-              isActive(pathname, link.href) ? "bg-lime text-forest" : "text-white/70 hover:bg-white/5 hover:text-white"
+              isActive(pathname, link.href) ? "bg-forest text-white" : "text-ink/70 hover:bg-forest/5 hover:text-ink"
             }`}
           >
             <Icon d={link.icon} />
@@ -59,7 +59,7 @@ export function SiteNav() {
         ))}
         <Link
           href="/inscriere"
-          className="ml-1 rounded-xl border border-lime/60 px-4 py-2 text-sm font-bold text-lime hover:bg-lime hover:text-forest"
+          className="ml-1 rounded-xl bg-lime px-4 py-2 text-sm font-bold text-forest hover:brightness-95"
         >
           Înscrie echipa
         </Link>
@@ -67,7 +67,7 @@ export function SiteNav() {
 
       <button
         type="button"
-        className="grid size-10 place-items-center rounded-xl text-white hover:bg-white/10 xl:hidden"
+        className="grid size-10 place-items-center rounded-xl text-ink hover:bg-forest/5 xl:hidden"
         aria-expanded={open}
         aria-controls="mobile-nav"
         aria-label={open ? "Închide meniul" : "Deschide meniul"}
@@ -81,7 +81,7 @@ export function SiteNav() {
       {open && (
         <nav
           id="mobile-nav"
-          className="absolute inset-x-0 top-full border-t border-white/10 bg-forest px-4 pb-4 pt-2 shadow-lg xl:hidden"
+          className="absolute inset-x-0 top-full border-t border-line bg-white px-4 pb-4 pt-2 shadow-lg xl:hidden"
           aria-label="Navigare principală"
         >
           {links.map((link) => (
@@ -91,7 +91,7 @@ export function SiteNav() {
               onClick={() => setOpen(false)}
               aria-current={isActive(pathname, link.href) ? "page" : undefined}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-base font-semibold ${
-                isActive(pathname, link.href) ? "bg-lime text-forest" : "text-white/75"
+                isActive(pathname, link.href) ? "bg-forest text-white" : "text-ink/75"
               }`}
             >
               <Icon d={link.icon} />

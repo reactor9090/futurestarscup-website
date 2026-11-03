@@ -1,12 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { TeamBadge } from "@/components/club-logo";
 import { Eyebrow } from "@/components/ui";
 import { positionLabels } from "@/lib/labels";
-import { getRoundAwards, type RoundAward } from "@/lib/public-data";
+import { getCompetitions, getRoundAwards, type RoundAward } from "@/lib/public-data";
 
-const stripes =
-  "absolute inset-0 opacity-40 [background:repeating-linear-gradient(90deg,var(--color-forest-soft)_0_80px,var(--color-forest)_80px_160px)]";
+/** Fundalul hero-ului: poza terenului, ușor încețoșată, sub un strat închis ca textul să rămână lizibil. */
+function HeroBackdrop() {
+  return (
+    <div className="absolute inset-0" aria-hidden>
+      <Image src="/hero.png" alt="" fill priority sizes="100vw" quality={70} className="scale-105 object-cover object-[center_35%] blur-[2px]" />
+      <div className="absolute inset-0 bg-forest/45" />
+      <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/15 to-transparent" />
+    </div>
+  );
+}
 
 /** Hero-ul paginii de start: caruselul „Jucătorul etapei”, sau prezentarea campionatului dacă nu există. */
 export async function HomeHero() {
@@ -15,7 +24,7 @@ export async function HomeHero() {
 
   return (
     <section className="relative overflow-hidden bg-forest">
-      <div className={stripes} aria-hidden />
+      <HeroBackdrop />
       <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
         <ul className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 [scrollbar-width:thin]" aria-label="Jucătorul etapei">
           {awards.map((a, i) => (
@@ -105,15 +114,24 @@ function AwardSlide({ award: a }: { award: RoundAward }) {
 export function DefaultHero() {
   return (
     <section className="relative overflow-hidden bg-forest">
-      <div className={stripes} aria-hidden />
-      <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/60 to-transparent" aria-hidden />
+      <HeroBackdrop />
       <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
-        <Eyebrow className="text-lime">Sezonul 2026/2027</Eyebrow>
+        <Eyebrow className="text-lime">Ediția 2026-2027</Eyebrow>
         <h1 className="mt-4 max-w-3xl font-display text-5xl font-extrabold uppercase leading-[0.95] tracking-tight text-white sm:text-7xl">
-          Campionatul viitorilor <span className="text-lime">campioni</span>
+          Future Stars Cup <span className="text-lime">2026</span>
         </h1>
         <p className="mt-5 max-w-xl text-lg text-white/70">
           Clasamente, program, rezultate și statistici pentru toate categoriile de vârstă, actualizate după fiecare meci.
+        </p>
+        <Suspense>
+          <HeroCategories />
+        </Suspense>
+        <p className="mt-3 flex items-center gap-2 text-white/80">
+          <svg viewBox="0 0 24 24" className="size-5 shrink-0 text-lime" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21z" />
+            <circle cx="12" cy="9.5" r="2.5" />
+          </svg>
+          Stadionul Parcul La Izvor
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/clasament" className="rounded-xl bg-lime px-5 py-3 text-sm font-bold text-forest hover:brightness-95">
@@ -125,5 +143,30 @@ export function DefaultHero() {
         </div>
       </div>
     </section>
+  );
+}
+
+/** Categoriile de vârstă din ediția curentă, ex. „U10 | U12 | U14”. */
+async function HeroCategories() {
+  const competitions = await getCompetitions();
+  const season = competitions[0]?.season?.name;
+  const names = [
+    ...new Map(
+      competitions
+        .filter((c) => c.category && c.season?.name === season)
+        .sort((a, b) => a.category!.sort_order - b.category!.sort_order)
+        .map((c) => [c.category!.name, c.category!.name]),
+    ).values(),
+  ];
+  if (names.length === 0) return null;
+  return (
+    <p className="mt-4 flex flex-wrap items-center gap-x-3 font-display text-2xl font-bold tracking-wide text-white">
+      {names.map((n, i) => (
+        <span key={n} className="flex items-center gap-3">
+          {i > 0 && <span className="text-lime/70" aria-hidden>|</span>}
+          {n}
+        </span>
+      ))}
+    </p>
   );
 }

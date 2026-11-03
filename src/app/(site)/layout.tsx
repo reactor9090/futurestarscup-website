@@ -26,9 +26,9 @@ const footerLinks = [
 export default function SiteLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="flex flex-1 flex-col bg-paper">
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-forest">
-        <div className="relative mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Logo />
+      <header className="sticky top-0 z-40 border-b border-line bg-white">
+        <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+          <Logo tone="dark" height={68} />
           <Suspense>
             <SiteNav />
           </Suspense>
@@ -40,7 +40,7 @@ export default function SiteLayout({ children }: LayoutProps<"/">) {
       <footer className="mt-16 bg-forest text-white/60">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-3">
           <div className="space-y-3">
-            <Logo />
+            <Logo height={72} />
             <p className="max-w-xs text-sm">
               Campionatul de fotbal pentru copii. Clasamente, program și statistici actualizate după fiecare meci.
             </p>
