@@ -27,6 +27,7 @@ const playerSchema = z.object({
 });
 
 const registrationSchema = z.object({
+  access_code: z.string().trim().max(100).optional(),
   competition_id: z.uuid("Alege categoria"),
   club_name: text("Numele echipei", 120),
   city: optional(120, "Orașul e prea lung"),
@@ -67,4 +68,22 @@ export async function submitRegistration(_prev: RegistrationState, formData: For
     return { error: error.code === "P0001" ? error.message : "Nu am putut trimite înscrierea. Încearcă din nou peste câteva minute." };
   }
   return { done: true };
+}
+
+/** Există un cod de acces setat de organizatori? Dacă nu, formularul se afișează direct. */
+export async function isAccessCodeRequired(): Promise<boolean> {
+  const { data, error } = await createPublicClient().rpc("registration_code_ok", { p_code: "" });
+  if (error) return true;
+  return data === false;
+}
+
+export type AccessCodeState = { error?: string; code?: string };
+
+/** Pasul dinaintea formularului: verifică codul. Verificarea reală se repetă în `submit_registration`. */
+export async function verifyAccessCode(_prev: AccessCodeState, formData: FormData): Promise<AccessCodeState> {
+  const code = String(formData.get("access_code") ?? "").trim().slice(0, 100);
+  if (!code) return { error: "Introdu codul de înscriere" };
+  const { data, error } = await createPublicClient().rpc("registration_code_ok", { p_code: code });
+  if (error) return { error: "Nu am putut verifica codul. Încearcă din nou." };
+  return data ? { code } : { error: "Cod invalid. Cere codul corect de la organizatori." };
 }

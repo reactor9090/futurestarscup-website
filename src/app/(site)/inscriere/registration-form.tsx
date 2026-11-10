@@ -4,7 +4,7 @@ import { startTransition, useActionState, useState } from "react";
 import { Field, inputClass } from "@/components/admin/fields";
 import { positionLabels } from "@/lib/labels";
 import type { OpenCompetition } from "@/lib/public-data";
-import { submitRegistration, type RegistrationState } from "./actions";
+import { submitRegistration, verifyAccessCode, type AccessCodeState, type RegistrationState } from "./actions";
 
 type PlayerRow = { key: number; first_name: string; last_name: string; birth_date: string; position: string; shirt_number: string };
 
@@ -17,7 +17,7 @@ function ageRange(c: OpenCompetition) {
   return null;
 }
 
-export function RegistrationForm({ competitions }: { competitions: OpenCompetition[] }) {
+export function RegistrationForm({ competitions, accessCode = "" }: { competitions: OpenCompetition[]; accessCode?: string }) {
   const [state, action, pending] = useActionState<RegistrationState, FormData>(submitRegistration, {});
   const [competitionId, setCompetitionId] = useState(competitions[0]?.id ?? "");
   const [players, setPlayers] = useState<PlayerRow[]>([emptyPlayer(0)]);
@@ -48,6 +48,7 @@ export function RegistrationForm({ competitions }: { competitions: OpenCompetiti
         startTransition(() => action(data));
       }}
     >
+      <input type="hidden" name="access_code" value={accessCode} />
       <input type="hidden" name="players" value={JSON.stringify(players.map((p) => ({ first_name: p.first_name, last_name: p.last_name, birth_date: p.birth_date, position: p.position, shirt_number: p.shirt_number })))} />
       {/* Capcană pentru boți: ascuns vizual și din tastatură. */}
       <div aria-hidden className="absolute -left-[9999px]">
@@ -182,6 +183,46 @@ export function RegistrationForm({ competitions }: { competitions: OpenCompetiti
         className="rounded-md bg-pitch-700 px-6 py-3 font-semibold text-white hover:bg-pitch-800 disabled:opacity-50"
       >
         {pending ? "Se trimite…" : "Trimite înscrierea"}
+      </button>
+    </form>
+  );
+}
+
+/** Dacă organizatorii au setat un cod, formularul apare abia după ce vizitatorul îl introduce corect. */
+export function RegistrationGate({ competitions, codeRequired }: { competitions: OpenCompetition[]; codeRequired: boolean }) {
+  const [state, action, pending] = useActionState<AccessCodeState, FormData>(verifyAccessCode, {});
+  if (!codeRequired) return <RegistrationForm competitions={competitions} />;
+  if (state.code) return <RegistrationForm competitions={competitions} accessCode={state.code} />;
+
+  return (
+    <form
+      className="mx-auto max-w-md space-y-4 rounded-xl border border-line bg-surface p-6"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const data = new FormData(e.currentTarget);
+        startTransition(() => action(data));
+      }}
+    >
+      <div>
+        <h2 className="font-display text-xl font-bold uppercase tracking-wide">Înscriere pe bază de cod</h2>
+        <p className="mt-1 text-sm text-muted">
+          Înscrierea echipelor se face doar cu codul primit de la organizatori. Introdu-l ca să continui.
+        </p>
+      </div>
+      <Field label="Cod de înscriere">
+        <input name="access_code" required maxLength={100} autoComplete="off" autoCapitalize="characters" className={inputClass} />
+      </Field>
+      {state.error && (
+        <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-danger">
+          {state.error}
+        </p>
+      )}
+      <button
+        type="submit"
+        disabled={pending}
+        className="rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white hover:opacity-90 disabled:opacity-60"
+      >
+        {pending ? "Se verifică…" : "Continuă"}
       </button>
     </form>
   );

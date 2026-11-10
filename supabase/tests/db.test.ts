@@ -227,6 +227,24 @@ describe("înscriere online", () => {
     });
   });
 
+  it("cu cod setat, refuză înscrierea fără cod sau cu cod greșit și o acceptă cu codul corect", async () => {
+    const comp = await one<{ id: string }>(`select id from competitions where name like 'U10%'`);
+    await as("authenticated", ADMIN_ID, async () => {
+      await db.exec(`insert into registration_settings (access_code) values ('FSC-2027')`);
+    });
+    const withCode = (code?: string) => JSON.stringify({ ...JSON.parse(payload(comp.id)), access_code: code });
+    await as("anon", null, async () => {
+      await expect(db.query(`select submit_registration($1::jsonb)`, [payload(comp.id)])).rejects.toThrow(/Cod de înscriere/);
+      await expect(db.query(`select submit_registration($1::jsonb)`, [withCode("greșit")])).rejects.toThrow(/Cod de înscriere/);
+      expect((await one<{ ok: boolean }>(`select registration_code_ok('fsc-2027 ') as ok`)).ok).toBe(true);
+      expect((await one<{ ok: boolean }>(`select registration_code_ok('x') as ok`)).ok).toBe(false);
+      await db.query(`select submit_registration($1::jsonb)`, [withCode("fsc-2027")]);
+      // vizitatorul nu poate citi codul
+      expect((await db.query(`select * from registration_settings`)).rows).toHaveLength(0);
+    });
+    await db.exec(`delete from registration_settings`);
+  });
+
   it("acceptă înscrierea, iar adminul o aprobă → echipă + lot", async () => {
     const comp = await one<{ id: string }>(`select id from competitions where name like 'U10%'`);
     const reg = await as("anon", null, () =>

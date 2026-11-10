@@ -90,3 +90,6 @@ The plan is in `~/.claude/plans/uite-acum-as-kind-rivest.md`. The user compared 
   - "■ Termină meciul" sets the match to `finished`.
   Stats and standings count only finished matches. The public `MatchRow` shows a red LIVE score, and `currentRound` treats live like scheduled.
 - **Round awards:** the `round_awards` table (migration `20261101000001`) is managed in `/admin/jucatorul-etapei`. The player is picked as `team:player` and must be in that team's roster. The sponsor comes from `sponsors`.
+
+### Registration access code
+`/inscriere` can be restricted with a single access code (migration `20261101000004`, applied manually in the SQL Editor; `setup-complet.sql` does not include it). The admin sets it in `/admin/inscrieri` (table `registration_settings`, admin-only RLS; stored in plain text so the admin can read it back). The page shows a code step first (`RegistrationGate`, `registration_code_ok` RPC); `submit_registration` re-checks `payload.access_code` itself, so calling the RPC directly can't bypass it. Comparison ignores case and surrounding spaces. **No code set = the form is open to everyone.** There is no rate limit on guesses yet. The home hero also shows a "Echipe participante" logo panel (`getHeroTeams`, `TeamsPanel` in `home-hero.tsx`).

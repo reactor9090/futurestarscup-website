@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import { EmptyState } from "@/components/competition-picker";
 import { PageHeader } from "@/components/page-header";
 import { getOpenCompetitions } from "@/lib/public-data";
-import { RegistrationForm } from "./registration-form";
+import { isAccessCodeRequired } from "./actions";
+import { RegistrationGate } from "./registration-form";
 
 export const metadata: Metadata = { title: "Înscrie echipa" };
 
@@ -28,5 +29,5 @@ async function Form() {
   if (competitions.length === 0) {
     return <EmptyState>Înscrierile nu sunt deschise momentan. Revino în curând!</EmptyState>;
   }
-  return <RegistrationForm competitions={competitions} />;
+  return <RegistrationGate competitions={competitions} codeRequired={await isAccessCodeRequired()} />;
 }

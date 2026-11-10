@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import type { FormState } from "@/components/admin/action-form";
 import { idSchema, optionalText, refresh } from "@/lib/admin-actions";
 import { requireAdmin } from "@/lib/auth";
@@ -55,4 +56,20 @@ export async function deleteRegistration(_prev: FormState, formData: FormData): 
 
   refresh(PATH);
   return { ok: "Înscriere ștearsă" };
+}
+
+/** Setează (sau șterge, dacă e gol) codul de acces la formularul public de înscriere. */
+export async function saveAccessCode(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { supabase } = await requireAdmin();
+  const code = String(formData.get("access_code") ?? "").trim();
+  if (code.length > 50) return { error: "Codul poate avea cel mult 50 de caractere" };
+
+  const { error } = await supabase
+    .from("registration_settings")
+    .upsert({ id: true, access_code: code || null, updated_at: new Date().toISOString() });
+  if (error) return { error: `Eroare la salvare: ${error.message}` };
+
+  refresh(PATH);
+  revalidatePath("/inscriere");
+  return { ok: code ? "Codul a fost salvat" : "Codul a fost șters: înscrierea e deschisă oricui" };
 }

@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { TeamBadge } from "@/components/club-logo";
 import { Eyebrow } from "@/components/ui";
 import { positionLabels } from "@/lib/labels";
-import { getCompetitions, getRoundAwards, type RoundAward } from "@/lib/public-data";
+import { getCompetitions, getHeroTeams, getRoundAwards, type RoundAward } from "@/lib/public-data";
 
 /** Fundalul hero-ului: poza terenului, ușor încețoșată, sub un strat închis ca textul să rămână lizibil. */
 function HeroBackdrop() {
@@ -115,7 +115,8 @@ export function DefaultHero() {
   return (
     <section className="relative overflow-hidden bg-forest">
       <HeroBackdrop />
-      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
+      <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1fr_28rem]">
+        <div>
         <Eyebrow className="text-lime">Ediția 2026-2027</Eyebrow>
         <h1 className="mt-4 max-w-3xl font-display text-5xl font-extrabold uppercase leading-[0.95] tracking-tight text-white sm:text-7xl">
           Future Stars Cup <span className="text-lime">2026</span>
@@ -141,8 +142,40 @@ export function DefaultHero() {
             Programul meciurilor
           </Link>
         </div>
+        </div>
+        <Suspense>
+          <TeamsPanel />
+        </Suspense>
       </div>
     </section>
+  );
+}
+
+/** Panou cu logourile echipelor participante, luate automat din baza de date. */
+async function TeamsPanel() {
+  const teams = await getHeroTeams();
+  if (teams.length === 0) return null;
+  return (
+    <div className="relative mt-2 lg:mt-0">
+      <span className="absolute -top-3 right-6 z-10 bg-gradient-to-r from-lime/80 to-lime px-6 py-1.5 font-display text-sm font-extrabold uppercase tracking-wider text-forest [clip-path:polygon(6%_0,100%_0,94%_100%,0_100%)]">
+        Echipe participante
+      </span>
+      <div className="rounded-[2rem] border border-lime/50 bg-forest/70 p-4 pt-8 shadow-2xl backdrop-blur-sm sm:p-5 sm:pt-8">
+        <ul className="grid grid-cols-4 gap-2 sm:gap-3">
+          {teams.map((t) => (
+            <li key={t.id}>
+              <Link
+                href={`/echipe/${t.id}`}
+                title={t.name}
+                className="grid aspect-square place-items-center rounded-xl border border-lime/25 bg-white/5 p-1 transition hover:border-lime hover:bg-white/10"
+              >
+                <TeamBadge url={t.logo_url} name={t.name} size={48} tone="dark" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
 

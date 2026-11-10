@@ -34,6 +34,33 @@ export async function getCompetitions(): Promise<PublicCompetition[]> {
   );
 }
 
+export type HeroTeam = { id: string; name: string; logo_url: string | null };
+
+/** Echipele din sezonul curent (câte una per club), pentru panoul din hero. */
+export async function getHeroTeams(): Promise<HeroTeam[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("catalog", "teams");
+
+  const competitions = await getCompetitions();
+  const season = competitions[0]?.season?.name;
+  const ids = competitions.filter((c) => c.season?.name === season).map((c) => c.id);
+  if (ids.length === 0) return [];
+
+  const { data, error } = await createPublicClient()
+    .from("teams")
+    .select("id, name, club_id, club:clubs(logo_url)")
+    .in("competition_id", ids)
+    .overrideTypes<{ id: string; name: string; club_id: string; club: { logo_url: string | null } | null }[]>();
+  if (error) throw new Error(error.message);
+
+  const byClub = new Map<string, HeroTeam>();
+  for (const t of data) {
+    if (!byClub.has(t.club_id)) byClub.set(t.club_id, { id: t.id, name: t.name, logo_url: t.club?.logo_url ?? null });
+  }
+  return [...byClub.values()].sort((a, b) => a.name.localeCompare(b.name, "ro"));
+}
+
 /** Competiția cerută în adresă, sau prima (sezonul curent) dacă lipsește ori e necunoscută. */
 export function pickCompetition(list: PublicCompetition[], requested: string | string[] | undefined) {
   const id = Array.isArray(requested) ? requested[0] : requested;

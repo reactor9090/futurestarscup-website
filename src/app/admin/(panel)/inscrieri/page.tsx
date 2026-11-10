@@ -3,7 +3,7 @@ import { ActionForm, SubmitButton } from "@/components/admin/action-form";
 import { Field, inputClass } from "@/components/admin/fields";
 import { positionLabels, type Position } from "@/lib/labels";
 import { createSessionClient } from "@/lib/supabase/server";
-import { approveRegistration, deleteRegistration, rejectRegistration } from "./actions";
+import { approveRegistration, deleteRegistration, rejectRegistration, saveAccessCode } from "./actions";
 
 export const metadata: Metadata = { title: "Înscrieri", robots: { index: false } };
 
@@ -47,6 +47,9 @@ export default async function RegistrationsPage() {
     .overrideTypes<Registration[]>();
   if (error) throw new Error(error.message);
 
+  const settings = await supabase.from("registration_settings").select("access_code").maybeSingle();
+  const accessCode = settings.data?.access_code ?? "";
+
   const pending = data.filter((r) => r.status === "pending").reverse(); // cele mai vechi întâi
   const processed = data.filter((r) => r.status !== "pending");
 
@@ -59,6 +62,21 @@ export default async function RegistrationsPage() {
           datele de contact ale antrenorului rămân vizibile doar aici.
         </p>
       </div>
+
+      <section className="space-y-3 rounded-xl border border-line bg-surface p-5">
+        <h2 className="font-display text-xl font-bold uppercase tracking-wide">Cod de înscriere</h2>
+        <p className="text-sm text-muted">
+          {accessCode
+            ? "Doar cine are codul poate completa formularul public. Dă codul echipelor invitate și schimbă-l oricând."
+            : "Niciun cod setat: formularul public e deschis oricui. Setează un cod ca să-l restricționezi."}
+        </p>
+        <ActionForm action={saveAccessCode} className="flex flex-wrap items-end gap-3">
+          <Field label="Cod">
+            <input name="access_code" defaultValue={accessCode} maxLength={50} autoComplete="off" className={inputClass} />
+          </Field>
+          <SubmitButton>Salvează codul</SubmitButton>
+        </ActionForm>
+      </section>
 
       <section className="space-y-3">
         <h2 className="font-display text-xl font-bold uppercase tracking-wide">În așteptare ({pending.length})</h2>

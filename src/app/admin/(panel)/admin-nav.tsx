@@ -4,15 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // Secțiunile marcate `soon` se construiesc în faza 2 (admin core) și 5–6.
-export const adminSections: { href: string; label: string; soon?: boolean }[] = [
-  { href: "/admin", label: "Panou" },
-  { href: "/admin/sezoane", label: "Sezoane și categorii" },
-  { href: "/admin/competitii", label: "Competiții și faze" },
-  { href: "/admin/echipe", label: "Cluburi, echipe, jucători" },
-  { href: "/admin/meciuri", label: "Meciuri și rezultate" },
-  { href: "/admin/inscrieri", label: "Înscrieri" },
-  { href: "/admin/continut", label: "Anunțuri, sponsori, premii" },
-  { href: "/admin/jucatorul-etapei", label: "Jucătorul etapei" },
+export const adminSections: { href: string; label: string; icon: string; soon?: boolean }[] = [
+  { href: "/admin", label: "Panou", icon: "🏠" },
+  { href: "/admin/sezoane", label: "Sezoane și categorii", icon: "📅" },
+  { href: "/admin/competitii", label: "Competiții și faze", icon: "🏆" },
+  { href: "/admin/echipe", label: "Cluburi, echipe, jucători", icon: "👥" },
+  { href: "/admin/meciuri", label: "Meciuri și rezultate", icon: "⚽" },
+  { href: "/admin/inscrieri", label: "Înscrieri", icon: "📝" },
+  { href: "/admin/continut", label: "Anunțuri, sponsori, premii", icon: "📣" },
+  { href: "/admin/jucatorul-etapei", label: "Jucătorul etapei", icon: "⭐" },
 ];
 
 export function AdminNav() {
@@ -30,7 +30,7 @@ export function AdminNavLinks({ pathname }: { pathname: string }) {
             key={s.href}
             className="flex shrink-0 items-center justify-between gap-2 rounded-md px-3 py-2 text-sm text-pitch-100/40"
           >
-            {s.label}
+            <span><span aria-hidden className="mr-2">{s.icon}</span>{s.label}</span>
             <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] uppercase tracking-wider">curând</span>
           </span>
         ) : (
@@ -41,7 +41,7 @@ export function AdminNavLinks({ pathname }: { pathname: string }) {
               pathname === s.href ? "bg-white/10 text-white" : "text-pitch-100/80 hover:bg-white/5 hover:text-white"
             }`}
           >
-            {s.label}
+            <span><span aria-hidden className="mr-2">{s.icon}</span>{s.label}</span>
           </Link>
         ),
       )}
