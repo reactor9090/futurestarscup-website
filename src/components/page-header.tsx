@@ -1,3 +1,4 @@
+import { StadiumBackdrop } from "@/components/stadium-backdrop";
 import { Eyebrow } from "@/components/ui";
 
 export function PageHeader({
@@ -13,10 +14,7 @@ export function PageHeader({
 }) {
   return (
     <div className="relative overflow-hidden bg-forest">
-      <div
-        className="absolute inset-0 opacity-40 [background:repeating-linear-gradient(90deg,var(--color-forest-soft)_0_80px,var(--color-forest)_80px_160px)]"
-        aria-hidden
-      />
+      <StadiumBackdrop dim />
       <div className="relative mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-6 px-4 py-12 sm:px-6 sm:py-16">
         <div>
           <Eyebrow className="text-lime">{eyebrow}</Eyebrow>

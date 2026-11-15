@@ -2,20 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { TeamBadge } from "@/components/club-logo";
+import { StadiumBackdrop } from "@/components/stadium-backdrop";
 import { Eyebrow } from "@/components/ui";
 import { positionLabels } from "@/lib/labels";
 import { getCompetitions, getHeroTeams, getRoundAwards, type RoundAward } from "@/lib/public-data";
 
-/** Fundalul hero-ului: poza terenului, ușor încețoșată, sub un strat închis ca textul să rămână lizibil. */
-function HeroBackdrop() {
-  return (
-    <div className="absolute inset-0" aria-hidden>
-      <Image src="/hero.png" alt="" fill priority sizes="100vw" quality={70} className="scale-105 object-cover object-[center_35%] blur-[2px]" />
-      <div className="absolute inset-0 bg-forest/45" />
-      <div className="absolute inset-0 bg-gradient-to-t from-forest via-forest/15 to-transparent" />
-    </div>
-  );
-}
 
 /** Hero-ul paginii de start: caruselul „Jucătorul etapei”, sau prezentarea campionatului dacă nu există. */
 export async function HomeHero() {
@@ -24,7 +15,7 @@ export async function HomeHero() {
 
   return (
     <section className="relative overflow-hidden bg-forest">
-      <HeroBackdrop />
+      <StadiumBackdrop />
       <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
         <ul className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 [scrollbar-width:thin]" aria-label="Jucătorul etapei">
           {awards.map((a, i) => (
@@ -114,7 +105,7 @@ function AwardSlide({ award: a }: { award: RoundAward }) {
 export function DefaultHero() {
   return (
     <section className="relative overflow-hidden bg-forest">
-      <HeroBackdrop />
+      <StadiumBackdrop />
       <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1fr_28rem]">
         <div>
         <Eyebrow className="text-lime">Ediția 2026-2027</Eyebrow>

@@ -70,8 +70,7 @@ async function Sponsors() {
   const sponsors = await getSponsors();
   if (sponsors.length === 0) return null;
   return (
-    <section className="space-y-4">
-      <h2 className="font-display text-4xl font-extrabold tracking-tight text-forest">Sponsori și parteneri</h2>
+    <section>
       <SponsorsStrip sponsors={sponsors} />
     </section>
   );

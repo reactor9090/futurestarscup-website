@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
 import { TeamBadge } from "@/components/club-logo";
+import { StadiumBackdrop } from "@/components/stadium-backdrop";
 import { EmptyState, Stat } from "@/components/ui";
 import { MatchPanel, MatchRow } from "@/components/match-row";
 import { positionLabels } from "@/lib/labels";
@@ -58,8 +59,9 @@ async function Team({ params }: { params: PageProps<"/echipe/[teamId]">["params"
 
   return (
     <>
-      <div className="bg-forest">
-        <div className="mx-auto flex max-w-7xl items-center gap-5 px-4 py-10 sm:px-6 sm:py-14">
+      <div className="relative overflow-hidden bg-forest">
+        <StadiumBackdrop dim />
+        <div className="relative mx-auto flex max-w-7xl items-center gap-5 px-4 py-10 sm:px-6 sm:py-14">
           <TeamBadge url={team.club?.logo_url ?? null} name={team.name} size={96} />
           <div>
             <Link

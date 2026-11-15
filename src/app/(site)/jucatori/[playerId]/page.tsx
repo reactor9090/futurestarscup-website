@@ -6,6 +6,7 @@ import { z } from "zod";
 import { TeamBadge } from "@/components/club-logo";
 import { MatchPanel, MatchRow } from "@/components/match-row";
 import { PlayerAvatar } from "@/components/player-avatar";
+import { StadiumBackdrop } from "@/components/stadium-backdrop";
 import { Eyebrow, EmptyState, Stat } from "@/components/ui";
 import { positionLabels } from "@/lib/labels";
 import { getPlayerProfile } from "@/lib/public-data";
@@ -42,10 +43,7 @@ async function Player({ params }: { params: PageProps<"/jucatori/[playerId]">["p
   return (
     <>
       <div className="relative overflow-hidden bg-forest">
-        <div
-          className="absolute inset-0 opacity-40 [background:repeating-linear-gradient(90deg,var(--color-forest-soft)_0_80px,var(--color-forest)_80px_160px)]"
-          aria-hidden
-        />
+        <StadiumBackdrop dim />
         {current.shirt_number !== null && (
           <span
             className="pointer-events-none absolute -bottom-10 right-0 select-none font-display text-[16rem] font-extrabold leading-none text-white/5"

@@ -69,8 +69,7 @@ export async function HomeSponsors() {
   const sponsors = await getSponsors();
   if (sponsors.length === 0) return null;
   return (
-    <section className="mx-auto max-w-7xl space-y-4 px-4 pb-4 pt-12 sm:px-6">
-      <h2 className="font-display text-5xl font-extrabold leading-none tracking-tight text-forest sm:text-6xl">Parteneri</h2>
+    <section className="mx-auto max-w-7xl px-4 pb-4 pt-12 sm:px-6">
       <SponsorsStrip sponsors={sponsors} />
     </section>
   );

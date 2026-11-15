@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
 import { TeamBadge } from "@/components/club-logo";
+import { StadiumBackdrop } from "@/components/stadium-backdrop";
 import { Icon, icons } from "@/components/icons";
 import { formatDay } from "@/components/match-row";
 import { positionLabels } from "@/lib/labels";
@@ -148,7 +149,8 @@ function Scoreboard({ m }: { m: MatchDetail }) {
 
   return (
     <section className="relative overflow-hidden bg-forest text-white">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+      <StadiumBackdrop dim />
+      <div className="relative mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
         <Link href={`/meciuri?competitie=${m.competition.id}`} className="text-sm text-white/60 hover:text-white">
           ← Toate meciurile
         </Link>
