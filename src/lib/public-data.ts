@@ -568,6 +568,32 @@ export async function getSponsors(): Promise<PublicSponsor[]> {
   return data;
 }
 
+export type PublicSponsorGift = {
+  id: string;
+  title: string;
+  description: string | null;
+  recipients: string | null;
+  image_url: string | null;
+  sponsor: { id: string; name: string; logo_url: string | null; website_url: string | null } | null;
+};
+
+/** Premiile partenerilor (ce primesc jucătorii de la sponsori), în ordinea aleasă de admin. */
+export async function getSponsorGifts(): Promise<PublicSponsorGift[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("content");
+
+  const { data, error } = await createPublicClient()
+    .from("sponsor_gifts")
+    .select("id, title, description, recipients, image_url, sponsor:sponsors(id, name, logo_url, website_url)")
+    .eq("is_active", true)
+    .order("sort_order")
+    .order("created_at")
+    .overrideTypes<PublicSponsorGift[]>();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 export type PublicPrize = {
   id: string;
   title: string;

@@ -3,8 +3,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { CompetitionPicker, EmptyState } from "@/components/competition-picker";
 import { PageHeader } from "@/components/page-header";
+import { SponsorGifts } from "@/components/sponsor-gifts";
 import { SponsorsStrip } from "@/components/sponsors-strip";
-import { getCompetitions, getPrizes, getSponsors, pickCompetition } from "@/lib/public-data";
+import { getCompetitions, getPrizes, getSponsorGifts, getSponsors, pickCompetition } from "@/lib/public-data";
 
 export const metadata: Metadata = { title: "Premii și sponsori" };
 
@@ -22,6 +23,9 @@ export default function PremiiPage({ searchParams }: PageProps<"/premii">) {
         </Suspense>
         <Suspense>
           <Sponsors />
+        </Suspense>
+        <Suspense>
+          <Gifts />
         </Suspense>
       </div>
     </>
@@ -74,4 +78,8 @@ async function Sponsors() {
       <SponsorsStrip sponsors={sponsors} />
     </section>
   );
+}
+
+async function Gifts() {
+  return <SponsorGifts gifts={await getSponsorGifts()} />;
 }

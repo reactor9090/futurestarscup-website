@@ -7,12 +7,15 @@ import {
   createAnnouncement,
   createPrize,
   createSponsor,
+  createSponsorGift,
   deleteAnnouncement,
   deletePrize,
   deleteSponsor,
+  deleteSponsorGift,
   updateAnnouncement,
   updatePrize,
   updateSponsor,
+  updateSponsorGift,
 } from "./actions";
 
 export const metadata: Metadata = { title: "Anunțuri, sponsori, premii", robots: { index: false } };
@@ -36,6 +39,16 @@ type Sponsor = {
   sort_order: number;
   is_active: boolean;
 };
+type SponsorGift = {
+  id: string;
+  sponsor_id: string | null;
+  title: string;
+  description: string | null;
+  recipients: string | null;
+  image_url: string | null;
+  is_active: boolean;
+  sort_order: number;
+};
 type Prize = {
   id: string;
   competition_id: string;
@@ -57,7 +70,7 @@ const fileClass =
 
 export default async function ContentPage() {
   const supabase = await createSessionClient();
-  const [announcements, sponsors, prizes, competitions] = await Promise.all([
+  const [announcements, sponsors, gifts, prizes, competitions] = await Promise.all([
     supabase
       .from("announcements")
       .select("id, title, body, image_url, link_url, is_banner, is_published, sort_order")
@@ -71,15 +84,22 @@ export default async function ContentPage() {
       .order("name")
       .overrideTypes<Sponsor[]>(),
     supabase
+      .from("sponsor_gifts")
+      .select("id, sponsor_id, title, description, recipients, image_url, is_active, sort_order")
+      .order("sort_order")
+      .order("created_at")
+      .overrideTypes<SponsorGift[]>(),
+    supabase
       .from("prizes")
       .select("id, competition_id, title, description, winner_team_id, winner_text, sort_order")
       .order("sort_order")
       .overrideTypes<Prize[]>(),
     supabase.from("competitions").select("id, name, season:seasons(start_date), teams(id, name)").overrideTypes<Competition[]>(),
   ]);
-  const failed = announcements.error ?? sponsors.error ?? prizes.error ?? competitions.error;
+  const failed = announcements.error ?? sponsors.error ?? gifts.error ?? prizes.error ?? competitions.error;
   if (failed) throw new Error(failed.message);
 
+  const sponsorList = sponsors.data ?? [];
   const competitionList = (competitions.data ?? []).sort(
     (a, b) => (b.season?.start_date ?? "").localeCompare(a.season?.start_date ?? "") || a.name.localeCompare(b.name, "ro"),
   );
@@ -146,6 +166,40 @@ export default async function ContentPage() {
           <p className="text-sm font-semibold">Sponsor nou</p>
           <SponsorFields />
           <SubmitButton>Adaugă sponsorul</SubmitButton>
+        </ActionForm>
+      </Card>
+
+      <Card
+        title="Premiile partenerilor"
+        description="Ce primesc jucătorii de la sponsori (ex. o geantă pentru fiecare jucător). Apar pe prima pagină sub parteneri și pe /premii."
+      >
+        <div className="space-y-2">
+          {(gifts.data ?? []).map((g) => (
+            <details key={g.id} className="rounded-lg border border-line">
+              <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2 px-4 py-3 font-semibold">
+                {g.title}
+                <span className="text-sm font-normal text-muted">
+                  {g.recipients || "Fiecare jucător"}
+                  {g.sponsor_id && ` · ${sponsorList.find((s) => s.id === g.sponsor_id)?.name ?? ""}`}
+                </span>
+                {!g.is_active && <Pill>Ascuns</Pill>}
+              </summary>
+              <div className="space-y-4 border-t border-line p-4">
+                <ActionForm action={updateSponsorGift} className="space-y-3">
+                  <input type="hidden" name="id" value={g.id} />
+                  <SponsorGiftFields sponsors={sponsorList} gift={g} />
+                  <SubmitButton variant="secondary">Salvează</SubmitButton>
+                </ActionForm>
+                <DeleteForm action={deleteSponsorGift} id={g.id} confirm={`Ștergi premiul „${g.title}”?`} />
+              </div>
+            </details>
+          ))}
+          {(gifts.data ?? []).length === 0 && <p className="text-sm text-muted">Niciun premiu de la parteneri încă.</p>}
+        </div>
+        <ActionForm action={createSponsorGift} resetOnSuccess className="mt-4 space-y-3 rounded-lg bg-canvas p-4">
+          <p className="text-sm font-semibold">Premiu nou</p>
+          <SponsorGiftFields sponsors={sponsorList} />
+          <SubmitButton>Adaugă premiul</SubmitButton>
         </ActionForm>
       </Card>
 
@@ -283,6 +337,42 @@ function SponsorFields({ sponsor: s }: { sponsor?: Sponsor }) {
       <ImagePicker name="logo" label="Logo" current={s?.logo_url} />
       <label className="flex items-center gap-2 text-sm">
         <input name="is_active" type="checkbox" defaultChecked={s?.is_active ?? true} className="size-4 accent-pitch-700" />
+        Afișat pe site
+      </label>
+    </>
+  );
+}
+
+function SponsorGiftFields({ sponsors, gift: g }: { sponsors: Sponsor[]; gift?: SponsorGift }) {
+  return (
+    <>
+      <div className="flex flex-wrap items-end gap-3">
+        <Field label="Premiu (ex. Geantă sport premium)" className="w-64">
+          <input name="title" required maxLength={80} defaultValue={g?.title} className={inputClass} />
+        </Field>
+        <Field label="Cine primește" className="w-52">
+          <input name="recipients" maxLength={80} placeholder="Fiecare jucător" defaultValue={g?.recipients ?? ""} className={inputClass} />
+        </Field>
+        <Field label="Oferit de" className="w-48">
+          <select name="sponsor_id" defaultValue={g?.sponsor_id ?? ""} className={inputClass}>
+            <option value="">—</option>
+            {sponsors.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Ordine" className="w-20">
+          <input name="sort_order" type="number" min={0} max={1000} defaultValue={g?.sort_order ?? 0} className={inputClass} />
+        </Field>
+      </div>
+      <Field label="Descriere (opțional)" className="max-w-2xl">
+        <input name="description" maxLength={300} defaultValue={g?.description ?? ""} className={inputClass} />
+      </Field>
+      <ImagePicker name="image" label="Poza produsului (ideal PNG cu fundal transparent)" current={g?.image_url} />
+      <label className="flex items-center gap-2 text-sm">
+        <input name="is_active" type="checkbox" defaultChecked={g?.is_active ?? true} className="size-4 accent-pitch-700" />
         Afișat pe site
       </label>
     </>

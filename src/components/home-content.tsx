@@ -1,6 +1,7 @@
 import Image from "next/image";
+import { SponsorGifts } from "@/components/sponsor-gifts";
 import { SponsorsStrip } from "@/components/sponsors-strip";
-import { getAnnouncements, getSponsors, type PublicAnnouncement } from "@/lib/public-data";
+import { getAnnouncements, getSponsorGifts, getSponsors, type PublicAnnouncement } from "@/lib/public-data";
 
 const date = new Intl.DateTimeFormat("ro-RO", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Bucharest" });
 
@@ -71,6 +72,17 @@ export async function HomeSponsors() {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-4 pt-12 sm:px-6">
       <SponsorsStrip sponsors={sponsors} />
+    </section>
+  );
+}
+
+/** Premiile partenerilor, chiar sub „Partenerii noștri”. */
+export async function HomeSponsorGifts() {
+  const gifts = await getSponsorGifts();
+  if (gifts.length === 0) return null;
+  return (
+    <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
+      <SponsorGifts gifts={gifts} />
     </section>
   );
 }

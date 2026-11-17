@@ -183,6 +183,17 @@ describe("securitate (RLS)", () => {
     });
   });
 
+  it("premiile partenerilor: vizitatorul vede doar ce e afișat și nu poate scrie", async () => {
+    await db.exec(`
+      insert into sponsor_gifts (sponsor_id, title, recipients, is_active)
+      select (select id from sponsors order by name limit 1), g.title, 'Fiecare jucător', g.active
+      from (values ('Geantă', true), ('Sticlă', false)) g(title, active)`);
+    await as("anon", null, async () => {
+      expect((await one<{ n: number }>(`select count(*)::int n from sponsor_gifts`)).n).toBe(1);
+      await expect(db.exec(`insert into sponsor_gifts (title) values ('x')`)).rejects.toThrow();
+    });
+  });
+
   it("statistici de meci: public la citire, doar adminul scrie, validări", async () => {
     await db.exec(`
       insert into match_team_stats (match_id, team_id, shots, shots_on_target, possession)

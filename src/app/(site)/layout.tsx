@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Logo } from "@/components/logo";
 import { SiteNav } from "@/components/site-nav";
+import { GoldBackdrop } from "@/components/stadium-backdrop";
 
 const footerLinks = [
   {
@@ -25,7 +26,11 @@ const footerLinks = [
 
 export default function SiteLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className="flex flex-1 flex-col bg-paper">
+    <div className="relative isolate flex flex-1 flex-col bg-paper">
+      {/* Fundalul crem cu valuri aurii, fix pe ecran în spatele tuturor paginilor (nu se întinde pe paginile lungi). */}
+      <div className="fixed inset-0 -z-10">
+        <GoldBackdrop id="site" tone="light" />
+      </div>
       <header className="sticky top-0 z-40 border-b border-line bg-white">
         <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Logo tone="dark" height={68} />

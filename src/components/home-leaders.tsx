@@ -2,6 +2,7 @@ import Link from "next/link";
 import { TeamBadge } from "@/components/club-logo";
 import { CompetitionPicker } from "@/components/competition-picker";
 import { Icon, icons } from "@/components/icons";
+import { GoldBackdrop } from "@/components/stadium-backdrop";
 import { PlayerAvatar } from "@/components/player-avatar";
 import { Eyebrow } from "@/components/ui";
 import type { PlayerCardRow, PublicCompetition, PublicMatch } from "@/lib/public-data";
@@ -175,10 +176,7 @@ export function HomeLeaders({
 
   return (
     <section id="golgheteri" className="relative scroll-mt-16 overflow-hidden bg-forest">
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_0%,color-mix(in_oklab,var(--color-lime)_16%,transparent),transparent_55%)]"
-        aria-hidden
-      />
+      <GoldBackdrop id="golgheteri" />
       <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-5">
           <div>

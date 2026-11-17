@@ -89,6 +89,8 @@ The plan is in `~/.claude/plans/uite-acum-as-kind-rivest.md`. The user compared 
   - adding or deleting a goal or own goal moves the stored score by ±1 (`adjustLiveScore`);
   - "■ Termină meciul" sets the match to `finished`.
   Stats and standings count only finished matches. The public `MatchRow` shows a red LIVE score, and `currentRound` treats live like scheduled.
+- **Gala panels:** `ShowcasePanel` in `components/showcase.tsx` (stadium backdrop, gold star, centered title). `SponsorsStrip` features sponsors whose tier contains „principal” (or the only sponsor) in a big card. **Sponsor gifts** (what sponsors give players, e.g. a bag for every player) are separate from competition `prizes` (trophies with winners): table `sponsor_gifts` (migration `20261115000001`, applied manually in the SQL Editor, not in `setup-complet.sql`; title, recipients text defaulting to „Fiecare jucător”, optional sponsor, photo), managed in `/admin/continut`, shown by `SponsorGifts` on the home page below the partners and on `/premii`.
+- **Backgrounds:** `StadiumBackdrop` (hero photo) behind every page header; `GoldBackdrop` is a code-drawn gold-wave SVG, `tone="dark"` for the home schedule/top-scorer sections and `tone="light"` fixed behind the whole `(site)` layout.
 - **Round awards:** the `round_awards` table (migration `20261101000001`) is managed in `/admin/jucatorul-etapei`. The player is picked as `team:player` and must be in that team's roster. The sponsor comes from `sponsors`.
 
 ### Registration access code

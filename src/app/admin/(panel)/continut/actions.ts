@@ -233,3 +233,67 @@ export async function deletePrize(_prev: FormState, formData: FormData): Promise
   if (error) return dbError(error, "");
   return done("Premiu șters");
 }
+
+/* ------------------------- Premiile partenerilor ------------------------- */
+
+const giftSchema = z.object({
+  title: z.string().trim().min(1, "Numele premiului e obligatoriu").max(80, "Numele e prea lung"),
+  description: optionalText(300, "Descrierea e prea lungă"),
+  recipients: optionalText(80, "Textul „cine primește” e prea lung"),
+  sponsor_id: optionalId,
+  sort_order: sortOrder,
+});
+
+export async function createSponsorGift(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { supabase } = await requireAdmin();
+  const parsed = giftSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return firstError(parsed.error);
+
+  const image = await resolveImage(supabase, formData, "image", "sponsor-gifts", null);
+  if ("error" in image) return image;
+
+  const { error } = await supabase
+    .from("sponsor_gifts")
+    .insert({ ...parsed.data, is_active: formData.get("is_active") === "on", image_url: image.url });
+  if (error) {
+    await removeImage(supabase, image.url);
+    return dbError(error, "");
+  }
+  return done("Premiu adăugat");
+}
+
+export async function updateSponsorGift(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { supabase } = await requireAdmin();
+  const id = idSchema.safeParse(formData.get("id"));
+  const parsed = giftSchema.safeParse(Object.fromEntries(formData));
+  if (!id.success) return { error: "Premiu invalid" };
+  if (!parsed.success) return firstError(parsed.error);
+
+  const current = await supabase.from("sponsor_gifts").select("image_url").eq("id", id.data).single();
+  if (current.error) return { error: "Premiul nu mai există" };
+  const image = await resolveImage(supabase, formData, "image", "sponsor-gifts", current.data.image_url);
+  if ("error" in image) return image;
+
+  const { error } = await supabase
+    .from("sponsor_gifts")
+    .update({ ...parsed.data, is_active: formData.get("is_active") === "on", image_url: image.url })
+    .eq("id", id.data);
+  if (error) {
+    if (image.replaced && image.url) await removeImage(supabase, image.url);
+    return dbError(error, "");
+  }
+  if (image.replaced) await removeImage(supabase, current.data.image_url);
+  return done("Salvat");
+}
+
+export async function deleteSponsorGift(_prev: FormState, formData: FormData): Promise<FormState> {
+  const { supabase } = await requireAdmin();
+  const id = idSchema.safeParse(formData.get("id"));
+  if (!id.success) return { error: "Premiu invalid" };
+
+  const current = await supabase.from("sponsor_gifts").select("image_url").eq("id", id.data).maybeSingle();
+  const { error } = await supabase.from("sponsor_gifts").delete().eq("id", id.data);
+  if (error) return dbError(error, "");
+  await removeImage(supabase, current.data?.image_url ?? null);
+  return done("Premiu șters");
+}

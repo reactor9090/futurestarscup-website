@@ -4,6 +4,7 @@ import { initials, TeamBadge } from "@/components/club-logo";
 import { CompetitionPicker } from "@/components/competition-picker";
 import { formatDay } from "@/components/match-row";
 import { Icon, icons } from "@/components/icons";
+import { GoldBackdrop } from "@/components/stadium-backdrop";
 import { signed } from "@/components/ui";
 import { positionLabels } from "@/lib/labels";
 import type { PlayerCardRow, PublicCompetition, PublicMatch, StageStandings } from "@/lib/public-data";
@@ -281,10 +282,7 @@ export function HomeSchedule({
 
   return (
     <section id="program" className="relative scroll-mt-16 overflow-hidden bg-forest">
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_75%_0%,color-mix(in_oklab,var(--color-lime)_18%,transparent),transparent_55%)]"
-        aria-hidden
-      />
+      <GoldBackdrop id="program" />
       <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20">
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-5">
           <div>

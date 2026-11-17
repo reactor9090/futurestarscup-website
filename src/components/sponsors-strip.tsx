@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Icon, icons } from "@/components/icons";
-import { StadiumBackdrop } from "@/components/stadium-backdrop";
+import { GoldDivider, ShowcasePanel } from "@/components/showcase";
 import type { PublicSponsor } from "@/lib/public-data";
 
 const DEFAULT_TIER = "Parteneri";
@@ -22,28 +22,23 @@ function splitSponsors(sponsors: PublicSponsor[]) {
   return { main, tiers: [...tiers] };
 }
 
-/** Linie aurie care se stinge spre capete. */
-function GoldLine({ className = "" }: { className?: string }) {
-  return <span className={`h-px flex-1 bg-gradient-to-r from-transparent via-lime/70 to-transparent ${className}`} aria-hidden />;
-}
-
-function Divider({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-4">
-      <GoldLine />
-      <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-white/80">{children}</p>
-      <GoldLine />
-    </div>
-  );
-}
-
 /** Logo-ul pe o plăcuță albă (logo-urile pot fi închise la culoare), urmat de nume. */
-function SponsorMark({ sponsor, size }: { sponsor: PublicSponsor; size: "lg" | "sm" }) {
+function SponsorMark({
+  sponsor,
+  size,
+}: {
+  sponsor: PublicSponsor;
+  size: "lg" | "sm";
+}) {
   const lg = size === "lg";
   return (
-    <span className={`flex min-w-0 items-center justify-center ${lg ? "gap-5" : "gap-3"}`}>
+    <span
+      className={`flex min-w-0 items-center justify-center ${lg ? "gap-5" : "gap-3"}`}
+    >
       {sponsor.logo_url ? (
-        <span className={`grid shrink-0 place-items-center rounded-xl bg-white ${lg ? "h-16 px-3 sm:h-20" : "h-11 px-2"}`}>
+        <span
+          className={`grid shrink-0 place-items-center rounded-xl bg-white ${lg ? "h-16 px-3 sm:h-20" : "h-11 px-2"}`}
+        >
           <Image
             src={sponsor.logo_url}
             alt=""
@@ -53,7 +48,10 @@ function SponsorMark({ sponsor, size }: { sponsor: PublicSponsor; size: "lg" | "
           />
         </span>
       ) : (
-        <span className={`shrink-0 font-display font-extrabold italic text-lime ${lg ? "text-4xl" : "text-2xl"}`} aria-hidden>
+        <span
+          className={`shrink-0 font-display font-extrabold italic text-lime ${lg ? "text-4xl" : "text-2xl"}`}
+          aria-hidden
+        >
           {"//"}
         </span>
       )}
@@ -66,9 +64,23 @@ function SponsorMark({ sponsor, size }: { sponsor: PublicSponsor; size: "lg" | "
   );
 }
 
-function SponsorLink({ sponsor, className, children }: { sponsor: PublicSponsor; className: string; children: React.ReactNode }) {
+function SponsorLink({
+  sponsor,
+  className,
+  children,
+}: {
+  sponsor: PublicSponsor;
+  className: string;
+  children: React.ReactNode;
+}) {
   return sponsor.website_url ? (
-    <a href={sponsor.website_url} target="_blank" rel="noopener noreferrer" title={sponsor.name} className={className}>
+    <a
+      href={sponsor.website_url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={sponsor.name}
+      className={className}
+    >
       {children}
     </a>
   ) : (
@@ -82,68 +94,54 @@ export function SponsorsStrip({ sponsors }: { sponsors: PublicSponsor[] }) {
   const { main, tiers } = splitSponsors(sponsors);
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] bg-forest px-4 py-12 text-white sm:px-10 sm:py-16">
-      <StadiumBackdrop dim />
-      <div className="absolute inset-0 bg-forest/50" aria-hidden />
-      <svg
-        viewBox="0 0 24 24"
-        className="pointer-events-none absolute -right-10 -top-10 size-64 rotate-12 text-lime/15 sm:size-80"
-        fill="currentColor"
-        aria-hidden
-      >
-        <path d={icons.star} />
-      </svg>
+    <ShowcasePanel
+      title="Partenerii noștri"
+      subtitle="Alături de noi în dezvoltarea tinerilor fotbaliști."
+    >
+      {main.length > 0 && (
+        <ul className="mt-12 space-y-8">
+          {main.map((s) => (
+            <li key={s.id} className="relative">
+              <span className="absolute -top-3.5 left-5 z-10 flex items-center gap-2 rounded-full bg-lime px-4 py-1.5 text-xs font-extrabold uppercase tracking-wider text-forest shadow-lg sm:left-8">
+                <Icon d={icons.crown} className="size-3.5" />
+                {s.tier?.trim() || MAIN_TIER}
+              </span>
+              <SponsorLink
+                sponsor={s}
+                className="relative block overflow-hidden rounded-2xl border border-lime/60 bg-forest/70 px-6 py-10 shadow-2xl backdrop-blur-sm transition hover:border-lime sm:py-12"
+              >
+                <span
+                  className="absolute inset-x-[15%] top-0 h-px bg-gradient-to-r from-transparent via-lime to-transparent"
+                  aria-hidden
+                />
+                <span
+                  className="absolute inset-x-[25%] bottom-0 h-px bg-gradient-to-r from-transparent via-lime to-transparent"
+                  aria-hidden
+                />
+                <SponsorMark sponsor={s} size="lg" />
+              </SponsorLink>
+            </li>
+          ))}
+        </ul>
+      )}
 
-      <div className="relative mx-auto max-w-5xl">
-        <div className="text-center">
-          <div className="mx-auto flex max-w-md items-center gap-4">
-            <GoldLine />
-            <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-white/85">Future Stars Cup</p>
-            <GoldLine />
-          </div>
-          <h2 className="mt-4 font-display text-5xl font-extrabold leading-none tracking-tight sm:text-6xl">Partenerii noștri</h2>
-          <p className="mt-3 text-white/70">Alături de noi în dezvoltarea tinerilor fotbaliști.</p>
-        </div>
-
-        {main.length > 0 && (
-          <ul className="mt-12 space-y-8">
-            {main.map((s) => (
-              <li key={s.id} className="relative">
-                <span className="absolute -top-3.5 left-5 z-10 flex items-center gap-2 rounded-full bg-lime px-4 py-1.5 text-xs font-extrabold uppercase tracking-wider text-forest shadow-lg sm:left-8">
-                  <Icon d={icons.crown} className="size-3.5" />
-                  {s.tier?.trim() || MAIN_TIER}
-                </span>
+      {tiers.map(([tier, list]) => (
+        <div key={tier} className="mt-10 space-y-5">
+          <GoldDivider>{tier}</GoldDivider>
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {list.map((s) => (
+              <li key={s.id}>
                 <SponsorLink
                   sponsor={s}
-                  className="relative block overflow-hidden rounded-2xl border border-lime/60 bg-forest/70 px-6 py-10 shadow-2xl backdrop-blur-sm transition hover:border-lime sm:py-12"
+                  className="flex h-full items-center justify-center rounded-2xl border border-white/20 bg-forest/60 px-4 py-5 backdrop-blur-sm transition hover:border-lime/70"
                 >
-                  <span className="absolute inset-x-[15%] top-0 h-px bg-gradient-to-r from-transparent via-lime to-transparent" aria-hidden />
-                  <span className="absolute inset-x-[25%] bottom-0 h-px bg-gradient-to-r from-transparent via-lime to-transparent" aria-hidden />
-                  <SponsorMark sponsor={s} size="lg" />
+                  <SponsorMark sponsor={s} size="sm" />
                 </SponsorLink>
               </li>
             ))}
           </ul>
-        )}
-
-        {tiers.map(([tier, list]) => (
-          <div key={tier} className="mt-10 space-y-5">
-            <Divider>{tier}</Divider>
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {list.map((s) => (
-                <li key={s.id}>
-                  <SponsorLink
-                    sponsor={s}
-                    className="flex h-full items-center justify-center rounded-2xl border border-white/20 bg-forest/60 px-4 py-5 backdrop-blur-sm transition hover:border-lime/70"
-                  >
-                    <SponsorMark sponsor={s} size="sm" />
-                  </SponsorLink>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      ))}
+    </ShowcasePanel>
   );
 }

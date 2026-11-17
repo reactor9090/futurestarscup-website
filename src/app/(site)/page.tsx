@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { Announcements, HomeSponsors } from "@/components/home-content";
+import { Announcements, HomeSponsorGifts, HomeSponsors } from "@/components/home-content";
 import { DefaultHero, HomeHero } from "@/components/home-hero";
 import { HomeResults } from "@/components/home-results";
 import { HomeCompetitionSections } from "@/components/home-sections";
@@ -50,6 +50,10 @@ export default function HomePage({ searchParams }: PageProps<"/">) {
 
       <Suspense>
         <HomeSponsors />
+      </Suspense>
+
+      <Suspense>
+        <HomeSponsorGifts />
       </Suspense>
     </>
   );
